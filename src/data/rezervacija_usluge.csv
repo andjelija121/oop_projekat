@@ -1,0 +1,4 @@
+id,rezervacijaId,dodatnaUslugaId,kolicina,cenaPoJedinici,ukupno
+1,1,1,1,800,800
+2,2,2,1,500,500
+3,2,3,1,1000,1000

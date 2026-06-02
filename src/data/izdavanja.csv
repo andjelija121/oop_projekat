@@ -1,0 +1,2 @@
+id,rezervacijaId,agentId,voziloId,datumIzdavanja,datumVracanjaPlanirano,datumVracanjaStvarno,kmPreuzimanje,kmVracanje
+1,2,2,4,2026-06-05,2026-06-08,,87000,
