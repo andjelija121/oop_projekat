@@ -1,7 +1,7 @@
 id,tip,ime,prezime,pol,datumRodjenja,telefon,adresa,korisnickoIme,lozinka,datumDozvole,kategorijaKlijenta,nivoSpreme,godineStaza,osnova,koeficijent
-1,ADMINISTRATOR,Ana,Anic,ZENSKI,1990-05-12,060111222,Novi Sad,ana,123,,,,VII,8,80000,1.6
-2,AGENT,Marko,Markovic,MUSKI,1988-03-10,060333444,Beograd,marko,123,,,,VI,6,70000,1.4
-3,AGENT,Jovana,Jovic,ZENSKI,1995-09-21,060777888,Novi Sad,jovana,123,,,,VI,3,70000,1.4
+1,ADMINISTRATOR,Ana,Anic,ZENSKI,1990-05-12,060111222,Novi Sad,ana,123,,,VII,8,80000,1.6
+2,AGENT,Marko,Markovic,MUSKI,1988-03-10,060333444,Beograd,marko,123,,,VI,6,70000,1.4
+3,AGENT,Jovana,Jovic,ZENSKI,1995-09-21,060777888,Novi Sad,jovana,123,,,VI,3,70000,1.4
 4,KLIJENT,Petar,Petrovic,MUSKI,2000-01-20,060555666,Nis,petar@gmail.com,123,2020-06-01,STUDENT,,,,
 5,KLIJENT,Milica,Milic,ZENSKI,1998-11-04,060999000,Subotica,milica@gmail.com,123,2018-03-15,FIRMA,,,,
 6,KLIJENT,Lazar,Lazic,MUSKI,2003-07-18,061123456,Beograd,lazar@gmail.com,123,2023-12-10,BEZ_KATEGORIJE,,,,

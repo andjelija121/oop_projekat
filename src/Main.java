@@ -1,5 +1,14 @@
+import ui.AplikacijaFrame;
+
+import javax.swing.SwingUtilities;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Radi");
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new AplikacijaFrame();
+            }
+        });
     }
 }
