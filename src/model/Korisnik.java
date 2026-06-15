@@ -3,6 +3,7 @@ package model;
 import enums.Pol;
 
 public class Korisnik {
+    private int id;
     private String ime;
     private String prezime;
     private Pol pol;
@@ -13,6 +14,7 @@ public class Korisnik {
     private String lozinka;
 
     public Korisnik(String ime, String prezime, Pol pol, String datumRodjenja, String telefon, String adresa, String korisnickoIme, String lozinka) {
+        this.id = 0;
         this.ime = ime;
         this.prezime = prezime;
         this.pol = pol;
@@ -23,6 +25,25 @@ public class Korisnik {
         this.lozinka = lozinka;
     }
 
+    public Korisnik(int id, String ime, String prezime, Pol pol, String datumRodjenja, String telefon, String adresa, String korisnickoIme, String lozinka) {
+        this.id = id;
+        this.ime = ime;
+        this.prezime = prezime;
+        this.pol = pol;
+        this.datumRodjenja = datumRodjenja;
+        this.telefon = telefon;
+        this.adresa = adresa;
+        this.korisnickoIme = korisnickoIme;
+        this.lozinka = lozinka;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getIme() {
         return ime;

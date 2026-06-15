@@ -1,17 +1,17 @@
-package service;
+package menadzment;
 
 import enums.NivoSpreme;
 import enums.Pol;
 import model.Administrator;
 import model.Agent;
 import model.Korisnik;
-import repository.KorisnikRepository;
+import repozitorijum.KorisnikRepozitorijum;
 
-public class ZaposleniService {
-    private KorisnikRepository korisnikRepository;
+public class ZaposleniMenadzer {
+    private KorisnikRepozitorijum korisnikRepozitorijum;
 
-    public ZaposleniService(KorisnikRepository korisnikRepository) {
-        this.korisnikRepository = korisnikRepository;
+    public ZaposleniMenadzer(KorisnikRepozitorijum korisnikRepozitorijum) {
+        this.korisnikRepozitorijum = korisnikRepozitorijum;
     }
 
     public boolean dodajAgenta(Korisnik ulogovaniKorisnik, String ime, String prezime, Pol pol, String datumRodjenja,
@@ -21,13 +21,13 @@ public class ZaposleniService {
             return false;
         }
 
-        if (korisnikRepository.korisnickoImePostoji(korisnickoIme)) {
+        if (korisnikRepozitorijum.korisnickoImePostoji(korisnickoIme)) {
             return false;
         }
 
         Agent agent = new Agent(ime, prezime, pol, datumRodjenja, telefon, adresa, korisnickoIme, lozinka,
                 nivoSpreme, godineStaza, osnova);
-        korisnikRepository.dodaj(agent);
+        korisnikRepozitorijum.dodaj(agent);
         return true;
     }
 
@@ -38,13 +38,13 @@ public class ZaposleniService {
             return false;
         }
 
-        if (korisnikRepository.korisnickoImePostoji(korisnickoIme)) {
+        if (korisnikRepozitorijum.korisnickoImePostoji(korisnickoIme)) {
             return false;
         }
 
         Administrator administrator = new Administrator(ime, prezime, pol, datumRodjenja, telefon, adresa,
                 korisnickoIme, lozinka, nivoSpreme, godineStaza, osnova);
-        korisnikRepository.dodaj(administrator);
+        korisnikRepozitorijum.dodaj(administrator);
         return true;
     }
 }

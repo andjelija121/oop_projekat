@@ -1,4 +1,4 @@
-package repository;
+package repozitorijum;
 
 import enums.KategorijaKlijenta;
 import enums.NivoSpreme;
@@ -16,14 +16,14 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 
-public class KorisnikRepository {
+public class KorisnikRepozitorijum {
     private String putanjaDoFajla;
 
-    public KorisnikRepository() {
-        this.putanjaDoFajla = "src/data/korisnici.csv";
+    public KorisnikRepozitorijum() {
+        this.putanjaDoFajla = "src/fajlovi/korisnici.csv";
     }
 
-    public KorisnikRepository(String putanjaDoFajla) {
+    public KorisnikRepozitorijum(String putanjaDoFajla) {
         this.putanjaDoFajla = putanjaDoFajla;
     }
 
@@ -34,6 +34,9 @@ public class KorisnikRepository {
             ArrayList<String> linije = new ArrayList<>(Files.readAllLines(Path.of(putanjaDoFajla)));
 
             for (int i = 1; i < linije.size(); i++) {
+                if (linije.get(i).isBlank()) {
+                    continue;
+                }
                 Korisnik korisnik = napraviKorisnika(linije.get(i));
 
                 if (korisnik != null) {
@@ -83,6 +86,16 @@ public class KorisnikRepository {
         return klijenti;
     }
 
+    public Klijent pronadjiKlijentaPoId(int id) {
+        for (Klijent klijent : ucitajKlijente()) {
+            if (klijent.getId() == id) {
+                return klijent;
+            }
+        }
+
+        return null;
+    }
+
     public boolean korisnickoImePostoji(String korisnickoIme) {
         for (Korisnik korisnik : ucitajSve()) {
             if (korisnik.getKorisnickoIme().equals(korisnickoIme)) {
@@ -105,6 +118,7 @@ public class KorisnikRepository {
     private Korisnik napraviKorisnika(String linija) {
         String[] delovi = linija.split(",", -1);
 
+        int id = Integer.parseInt(delovi[0]);
         TipKorisnika tip = TipKorisnika.valueOf(delovi[1]);
         String ime = delovi[2];
         String prezime = delovi[3];
@@ -119,7 +133,7 @@ public class KorisnikRepository {
             String datumDozvole = delovi[10];
             KategorijaKlijenta posebnaKategorija = KategorijaKlijenta.valueOf(delovi[11]);
 
-            return new Klijent(ime, prezime, pol, datumRodjenja, telefon, adresa, korisnickoIme, lozinka,
+            return new Klijent(id, ime, prezime, pol, datumRodjenja, telefon, adresa, korisnickoIme, lozinka,
                     datumDozvole, posebnaKategorija);
         }
 
@@ -128,11 +142,11 @@ public class KorisnikRepository {
         double osnova = Double.parseDouble(delovi[14]);
 
         if (tip == TipKorisnika.ADMINISTRATOR) {
-            return new Administrator(ime, prezime, pol, datumRodjenja, telefon, adresa, korisnickoIme, lozinka,
+            return new Administrator(id, ime, prezime, pol, datumRodjenja, telefon, adresa, korisnickoIme, lozinka,
                     nivoSpreme, godineStaza, osnova);
         }
 
-        return new Agent(ime, prezime, pol, datumRodjenja, telefon, adresa, korisnickoIme, lozinka, nivoSpreme,
+        return new Agent(id, ime, prezime, pol, datumRodjenja, telefon, adresa, korisnickoIme, lozinka, nivoSpreme,
                 godineStaza, osnova);
     }
 
@@ -165,6 +179,9 @@ public class KorisnikRepository {
             int najveciId = 0;
 
             for (int i = 1; i < linije.size(); i++) {
+                if (linije.get(i).isBlank()) {
+                    continue;
+                }
                 String[] delovi = linije.get(i).split(",", -1);
                 int id = Integer.parseInt(delovi[0]);
 

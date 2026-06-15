@@ -13,6 +13,14 @@ public class Klijent extends Korisnik {
         super(ime,prezime,pol,datumRodjenja,telefon,adresa,korisnickoIme,lozinka);
         this.datumDozvole = vozacka;
     }
+
+    public Klijent(int id, String ime, String prezime, Pol pol, String datumRodjenja, String telefon, String adresa,
+                   String korisnickoIme, String lozinka, String vozacka, KategorijaKlijenta posebnaKategorija) {
+        super(id, ime, prezime, pol, datumRodjenja, telefon, adresa, korisnickoIme, lozinka);
+        this.datumDozvole = vozacka;
+        this.posebnaKategorija = posebnaKategorija;
+    }
+
     public Klijent(String ime,String prezime, Pol pol,String datumRodjenja,String telefon,String adresa,String korisnickoIme,String lozinka,String vozacka,KategorijaKlijenta posebnaKategorija){
         super(ime,prezime,pol,datumRodjenja,telefon,adresa,korisnickoIme,lozinka);
         this.datumDozvole = vozacka;
@@ -36,12 +44,27 @@ public class Klijent extends Korisnik {
     }
 
     public boolean vazecaDozvola(){
-        LocalDate trenutni_datum = LocalDate.now();
-        LocalDate datumVozacke = LocalDate.parse(this.getDatumDozvole());
-        if ((trenutni_datum.getYear()-datumVozacke.getYear())>1 || trenutni_datum.getMonthValue()>datumVozacke.getMonthValue()){
+        LocalDate trenutniDatum = LocalDate.now();
+        LocalDate datumIzdavanja = LocalDate.parse(datumDozvole);
+        int razlikaUGodinama = trenutniDatum.getYear() - datumIzdavanja.getYear();
+
+        if (razlikaUGodinama > 2) {
             return true;
         }
-        else return trenutni_datum.getYear() - datumVozacke.getYear() > 2;
+
+        if (razlikaUGodinama < 2) {
+            return false;
+        }
+
+        if (trenutniDatum.getMonthValue() > datumIzdavanja.getMonthValue()) {
+            return true;
+        }
+
+        if (trenutniDatum.getMonthValue() < datumIzdavanja.getMonthValue()) {
+            return false;
+        }
+
+        return trenutniDatum.getDayOfMonth() >= datumIzdavanja.getDayOfMonth();
     }
 
 

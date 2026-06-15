@@ -5,3 +5,8 @@ id,tip,ime,prezime,pol,datumRodjenja,telefon,adresa,korisnickoIme,lozinka,datumD
 4,KLIJENT,Petar,Petrovic,MUSKI,2000-01-20,060555666,Nis,petar@gmail.com,123,2020-06-01,STUDENT,,,,
 5,KLIJENT,Milica,Milic,ZENSKI,1998-11-04,060999000,Subotica,milica@gmail.com,123,2018-03-15,FIRMA,,,,
 6,KLIJENT,Lazar,Lazic,MUSKI,2003-07-18,061123456,Beograd,lazar@gmail.com,123,2023-12-10,BEZ_KATEGORIJE,,,,
+7,ADMINISTRATOR,Marija,Mikic,ZENSKI,2000-10-10,0648443497,Ns,marija,123,,,VI,4,50000.0,1.4
+8,ADMINISTRATOR,Ilija,Ilic,MUSKI,1990-01-01,0648443497,ns,ilija,123,,,IV,3,40000.0,1.0
+9,AGENT,Sava,Savic,MUSKI,2000-10-10,0648443497,Ns,sava,123,,,IV,2,50000.0,1.0
+10,KLIJENT,Ivan,Papic,MUSKI,2000-01-01,321142,ns,ivan@gmail.com,123,2020-01-01,STUDENT,,,,
+11,KLIJENT,Anastasija,ILic,MUSKI,2000-01-01,3,ns,anastasija@gmail.com,123,2026-01-01,FIRMA,,,,

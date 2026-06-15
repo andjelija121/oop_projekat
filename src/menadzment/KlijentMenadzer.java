@@ -1,17 +1,17 @@
-package service;
+package menadzment;
 
 import enums.KategorijaKlijenta;
 import enums.Pol;
 import model.Agent;
 import model.Klijent;
 import model.Korisnik;
-import repository.KorisnikRepository;
+import repozitorijum.KorisnikRepozitorijum;
 
-public class KlijentService {
-    private KorisnikRepository korisnikRepository;
+public class KlijentMenadzer {
+    private KorisnikRepozitorijum korisnikRepozitorijum;
 
-    public KlijentService(KorisnikRepository korisnikRepository) {
-        this.korisnikRepository = korisnikRepository;
+    public KlijentMenadzer(KorisnikRepozitorijum korisnikRepozitorijum) {
+        this.korisnikRepozitorijum = korisnikRepozitorijum;
     }
 
     public boolean dodajKlijenta(Korisnik ulogovaniKorisnik, String ime, String prezime, Pol pol,
@@ -21,13 +21,13 @@ public class KlijentService {
             return false;
         }
 
-        if (korisnikRepository.korisnickoImePostoji(email)) {
+        if (korisnikRepozitorijum.korisnickoImePostoji(email)) {
             return false;
         }
 
         Klijent klijent = new Klijent(ime, prezime, pol, datumRodjenja, telefon, adresa, email, lozinka,
                 datumDozvole, posebnaKategorija);
-        korisnikRepository.dodaj(klijent);
+        korisnikRepozitorijum.dodaj(klijent);
         return true;
     }
 }
