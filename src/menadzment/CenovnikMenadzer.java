@@ -18,10 +18,9 @@ public class CenovnikMenadzer {
         this.cenovnikRepozitorijum = cenovnikRepozitorijum;
     }
 
-    public double izracunajCenuRezervacije(Klijent klijent, ModelVozila modelVozila,
-                                           LocalDate datumOd, LocalDate datumDo,
-                                           ArrayList<DodatnaUsluga> dodatneUsluge,
-                                           int brojDodatnihDana) {
+    public double izracunajCenuNajma(Klijent klijent, ModelVozila modelVozila,
+                                     LocalDate datumOd, LocalDate datumDo,
+                                     int brojDodatnihDana) {
         if (klijent == null || modelVozila == null || datumOd == null || datumDo == null
                 || datumDo.isBefore(datumOd)) {
             return 0;
@@ -41,10 +40,36 @@ public class CenovnikMenadzer {
         double cenaPoDanu = pronadjiVrednostNajma(cenovnik, modelVozila);
         double cenaNajma = cenaPoDanu * brojObicnihDana;
         double popust = pronadjiPopust(cenovnik, klijent);
+
+        return cenaNajma - (cenaNajma * popust / 100);
+    }
+
+    public double izracunajCenuDodatnihUsluga(LocalDate datum,
+                                              ArrayList<DodatnaUsluga> dodatneUsluge,
+                                              int brojDodatnihDana) {
+        if (datum == null || dodatneUsluge == null || brojDodatnihDana < 0) {
+            return 0;
+        }
+
+        Cenovnik cenovnik = cenovnikRepozitorijum.pronadjiVazeciCenovnik(datum);
+        if (cenovnik == null) {
+            return 0;
+        }
+
         double cenaProduzenogKoriscenja = pronadjiCenuProduzenogKoriscenja(cenovnik) * brojDodatnihDana;
         double cenaDodatnihUsluga = izracunajCenuDodatnihUsluga(cenovnik, dodatneUsluge);
 
-        return cenaNajma - (cenaNajma * popust / 100) + cenaProduzenogKoriscenja + cenaDodatnihUsluga;
+        return cenaProduzenogKoriscenja + cenaDodatnihUsluga;
+    }
+
+    public double izracunajUkupnuCenuRezervacije(Klijent klijent, ModelVozila modelVozila,
+                                                 LocalDate datumOd, LocalDate datumDo,
+                                                 ArrayList<DodatnaUsluga> dodatneUsluge,
+                                                 int brojDodatnihDana) {
+        double cenaNajma = izracunajCenuNajma(klijent, modelVozila, datumOd, datumDo, brojDodatnihDana);
+        double cenaDodatnihUsluga = izracunajCenuDodatnihUsluga(datumOd, dodatneUsluge, brojDodatnihDana);
+
+        return cenaNajma + cenaDodatnihUsluga;
     }
 
     private int izracunajBrojDana(LocalDate datumOd, LocalDate datumDo) {

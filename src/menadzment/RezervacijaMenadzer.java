@@ -67,7 +67,9 @@ public class RezervacijaMenadzer {
     }
 
     public boolean napraviZahtevZaRezervaciju(Klijent klijent, ModelVozila modelVozila,
-                                               LocalDate datumOd, LocalDate datumDo) {
+                                               LocalDate datumOd, LocalDate datumDo,
+                                               double cenaNajma, double cenaDodatnihUsluga,
+                                               double cenaUkupno) {
         if (klijent == null || modelVozila == null) {
             return false;
         }
@@ -95,10 +97,10 @@ public class RezervacijaMenadzer {
                 datumOd,
                 datumDo,
                 StatusRezervacije.NA_CEKANJU,
+                cenaNajma,
+                cenaDodatnihUsluga,
                 0,
-                0,
-                0,
-                0
+                cenaUkupno
         );
 
         rezervacijaRepozitorijum.dodaj(rezervacija);

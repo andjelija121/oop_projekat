@@ -145,7 +145,7 @@ public class KlijentPanel extends JPanel {
                 LocalDate izabraniDatumDo = izracunajDatumDo(izabraniDatumOd, brojDodatnihDana);
                 datumDo.setText(izabraniDatumDo.toString());
 
-                double cena = izracunajCenu((ModelVozila) modelBox.getSelectedItem(),
+                double cena = izracunajUkupnuCenu((ModelVozila) modelBox.getSelectedItem(),
                         izabraniDatumOd, izabraniDatumDo,
                         izabraneDodatneUsluge(uslugaCheckBoxovi), brojDodatnihDana);
                 cenaLabela.setText(String.format("%.2f RSD", cena));
@@ -167,8 +167,16 @@ public class KlijentPanel extends JPanel {
 
                 LocalDate izabraniDatumDo = izracunajDatumDo(izabraniDatumOd, brojDodatnihDana);
                 datumDo.setText(izabraniDatumDo.toString());
+                ModelVozila izabraniModel = (ModelVozila) modelBox.getSelectedItem();
+                ArrayList<DodatnaUsluga> izabraneUsluge = izabraneDodatneUsluge(uslugaCheckBoxovi);
+                double cenaNajma = cenovnikMenadzer.izracunajCenuNajma(klijent, izabraniModel,
+                        izabraniDatumOd, izabraniDatumDo, brojDodatnihDana);
+                double cenaDodatnihUsluga = cenovnikMenadzer.izracunajCenuDodatnihUsluga(
+                        izabraniDatumOd, izabraneUsluge, brojDodatnihDana);
+                double cenaUkupno = cenaNajma + cenaDodatnihUsluga;
                 boolean uspesno = rezervacijaMenadzer.napraviZahtevZaRezervaciju(klijent,
-                        (ModelVozila) modelBox.getSelectedItem(), izabraniDatumOd, izabraniDatumDo);
+                        izabraniModel, izabraniDatumOd, izabraniDatumDo,
+                        cenaNajma, cenaDodatnihUsluga, cenaUkupno);
                 JOptionPane.showMessageDialog(this, uspesno ? "Zahtev za rezervaciju je napravljen."
                         : "Zahtev nije napravljen. Proverite datume, dostupnost i vozacku dozvolu.");
                 if (uspesno) osvezi.run();
@@ -201,9 +209,9 @@ public class KlijentPanel extends JPanel {
         return izabrane;
     }
 
-    private double izracunajCenu(ModelVozila modelVozila, LocalDate datumOd, LocalDate datumDo,
-                                ArrayList<DodatnaUsluga> dodatneUsluge, int brojDodatnihDana) {
-        return cenovnikMenadzer.izracunajCenuRezervacije(klijent, modelVozila, datumOd, datumDo,
+    private double izracunajUkupnuCenu(ModelVozila modelVozila, LocalDate datumOd, LocalDate datumDo,
+                                       ArrayList<DodatnaUsluga> dodatneUsluge, int brojDodatnihDana) {
+        return cenovnikMenadzer.izracunajUkupnuCenuRezervacije(klijent, modelVozila, datumOd, datumDo,
                 dodatneUsluge, brojDodatnihDana);
     }
 
