@@ -4,6 +4,7 @@ import menadzment.KlijentMenadzer;
 import menadzment.PrijavaMenadzer;
 import menadzment.RezervacijaMenadzer;
 import menadzment.ZaposleniMenadzer;
+import menadzment.CenovnikMenadzer;
 import model.Administrator;
 import model.Agent;
 import model.Klijent;
@@ -12,6 +13,8 @@ import repozitorijum.KorisnikRepozitorijum;
 import repozitorijum.ModelVozilaRepozitorijum;
 import repozitorijum.RezervacijaRepozitorijum;
 import repozitorijum.VoziloRepozitorijum;
+import repozitorijum.CenovnikRepozitorijum;
+import repozitorijum.DodatnaUslugaRepozitorijum;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -25,6 +28,8 @@ public class AplikacijaFrame extends JFrame {
     private final ZaposleniMenadzer zaposleniMenadzer;
     private final KlijentMenadzer klijentMenadzer;
     private final RezervacijaMenadzer rezervacijaMenadzer;
+    private final CenovnikMenadzer cenovnikMenadzer;
+    private final DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum;
     private Korisnik ulogovaniKorisnik;
 
     public AplikacijaFrame() {
@@ -38,6 +43,8 @@ public class AplikacijaFrame extends JFrame {
         RezervacijaRepozitorijum rezervacije = new RezervacijaRepozitorijum(
                 "src/fajlovi/rezervacije.csv", korisnikRepozitorijum, modeli);
         rezervacijaMenadzer = new RezervacijaMenadzer(rezervacije, vozila, modeli);
+        dodatnaUslugaRepozitorijum = new DodatnaUslugaRepozitorijum();
+        cenovnikMenadzer = new CenovnikMenadzer(new CenovnikRepozitorijum());
         rezervacijaMenadzer.odbijIstekleRezervacije();
 
         setTitle("Rent a Car");
@@ -73,6 +80,7 @@ public class AplikacijaFrame extends JFrame {
                     rezervacijaMenadzer, this::prikaziGlavniEkran, this::prikaziLogin));
         } else if (ulogovaniKorisnik instanceof Klijent) {
             setContentPane(new KlijentPanel((Klijent) ulogovaniKorisnik, rezervacijaMenadzer,
+                    cenovnikMenadzer, dodatnaUslugaRepozitorijum,
                     this::prikaziGlavniEkran, this::prikaziLogin));
         }
         osveziProzor();
