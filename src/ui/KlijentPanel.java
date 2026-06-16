@@ -84,7 +84,8 @@ public class KlijentPanel extends JPanel {
         JComboBox<ModelVozila> modelBox = new JComboBox<>();
         for (ModelVozila model : rezervacijaMenadzer.ucitajModeleVozila()) modelBox.addItem(model);
         JTextField datumOd = new JTextField(LocalDate.now().plusDays(1).toString());
-        JTextField datumDo = new JTextField(LocalDate.now().plusDays(3).toString());
+        JTextField datumDo = new JTextField(izracunajDatumDo(
+                LocalDate.now().plusDays(1), 0).toString());
         datumDo.setEditable(false);
         JTextField dodatniDani = new JTextField("0");
         JPanel uslugePanel = new JPanel();
@@ -326,7 +327,7 @@ public class KlijentPanel extends JPanel {
     }
 
     private LocalDate izracunajDatumDo(LocalDate datumOd, int brojDodatnihDana) {
-        int osnovniBrojDana = 3;
+        int osnovniBrojDana = cenovnikMenadzer.ucitajPodrazumevanoTrajanjeNajma();
         return datumOd.plusDays(osnovniBrojDana + brojDodatnihDana - 1);
     }
 

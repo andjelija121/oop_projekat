@@ -11,6 +11,7 @@ import model.Korisnik;
 import model.ModelVozila;
 import model.StavkaCenovnika;
 import repozitorijum.CenovnikRepozitorijum;
+import repozitorijum.PodesavanjaRepozitorijum;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -20,9 +21,11 @@ import java.util.HashMap;
 
 public class CenovnikMenadzer {
     private CenovnikRepozitorijum cenovnikRepozitorijum;
+    private PodesavanjaRepozitorijum podesavanjaRepozitorijum;
 
     public CenovnikMenadzer(CenovnikRepozitorijum cenovnikRepozitorijum) {
         this.cenovnikRepozitorijum = cenovnikRepozitorijum;
+        this.podesavanjaRepozitorijum = new PodesavanjaRepozitorijum();
     }
 
     public double izracunajCenuNajma(Klijent klijent, ModelVozila modelVozila,
@@ -65,7 +68,7 @@ public class CenovnikMenadzer {
 
         double cenaProduzenogKoriscenja = 0;
         for (int i = 0; i < brojDodatnihDana; i++) {
-            LocalDate datumDodatnogDana = datum.plusDays(3 + i);
+            LocalDate datumDodatnogDana = datum.plusDays(ucitajPodrazumevanoTrajanjeNajma() + i);
             Cenovnik cenovnik = cenovnikRepozitorijum.pronadjiVazeciCenovnik(datumDodatnogDana);
             if (cenovnik == null) {
                 return 0;
@@ -154,7 +157,7 @@ public class CenovnikMenadzer {
             return false;
         }
 
-        int osnovniBrojDana = 3;
+        int osnovniBrojDana = ucitajPodrazumevanoTrajanjeNajma();
         int ocekivaniDodatniDani = brojDana - osnovniBrojDana;
 
         if (ocekivaniDodatniDani < 0) {
@@ -245,6 +248,19 @@ public class CenovnikMenadzer {
         }
 
         return 0;
+    }
+
+    public int ucitajPodrazumevanoTrajanjeNajma() {
+        return podesavanjaRepozitorijum.ucitajPodrazumevanoTrajanjeNajma();
+    }
+
+    public boolean promeniPodrazumevanoTrajanjeNajma(Korisnik korisnik, int brojDana) {
+        if (!(korisnik instanceof Administrator) || brojDana <= 0) {
+            return false;
+        }
+
+        podesavanjaRepozitorijum.sacuvajPodrazumevanoTrajanjeNajma(brojDana);
+        return true;
     }
 
     public ArrayList<Cenovnik> ucitajCenovnike() {

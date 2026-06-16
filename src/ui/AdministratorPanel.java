@@ -63,6 +63,7 @@ public class AdministratorPanel extends JPanel {
         tabs.addTab("Zaposleni", zaposleniTabelaPanel());
         tabs.addTab("Dodaj zaposlenog", dodajZaposlenogPanel());
         tabs.addTab("Cenovnik", cenovnikPanel());
+        tabs.addTab("Podesavanja", podesavanjaPanel());
         add(UiKomponente.okvirAplikacije(tabs, "Administracija", administrator, odjava));
     }
 
@@ -171,6 +172,39 @@ public class AdministratorPanel extends JPanel {
         dugmad.add(novi);
 
         panel.add(new JScrollPane(sadrzaj), BorderLayout.CENTER);
+        panel.add(dugmad, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private JPanel podesavanjaPanel() {
+        JPanel panel = UiKomponente.kartica(new BorderLayout(0, 14));
+        panel.add(UiKomponente.naslovSekcije("Podesavanja"), BorderLayout.NORTH);
+
+        JPanel forma = new JPanel(new GridBagLayout());
+        forma.setBackground(UiKomponente.PANEL);
+        JTextField trajanjeNajma = new JTextField(
+                String.valueOf(cenovnikMenadzer.ucitajPodrazumevanoTrajanjeNajma()));
+        UiKomponente.dodajPolje(forma, 0, "Podrazumevano trajanje najma", trajanjeNajma);
+
+        JButton sacuvaj = UiKomponente.primarnoDugme("Sacuvaj podesavanja");
+        sacuvaj.addActionListener(e -> {
+            try {
+                int brojDana = Integer.parseInt(trajanjeNajma.getText().trim());
+                boolean uspesno = cenovnikMenadzer.promeniPodrazumevanoTrajanjeNajma(administrator, brojDana);
+                JOptionPane.showMessageDialog(this, uspesno
+                        ? "Podrazumevano trajanje najma je promenjeno."
+                        : "Trajanje najma mora biti pozitivan ceo broj.");
+                if (uspesno) osvezi.run();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Trajanje najma mora biti ceo broj.");
+            }
+        });
+
+        JPanel dugmad = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        dugmad.setBackground(UiKomponente.PANEL);
+        dugmad.add(sacuvaj);
+
+        panel.add(forma, BorderLayout.CENTER);
         panel.add(dugmad, BorderLayout.SOUTH);
         return panel;
     }
