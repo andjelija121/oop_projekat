@@ -1,6 +1,7 @@
 package ui;
 
 import menadzment.IzdavanjeMenadzer;
+import menadzment.IzvestajMenadzer;
 import menadzment.KlijentMenadzer;
 import menadzment.PretplataMenadzer;
 import menadzment.PrijavaMenadzer;
@@ -36,6 +37,7 @@ public class AplikacijaFrame extends JFrame {
     private final RezervacijaMenadzer rezervacijaMenadzer;
     private final IzdavanjeMenadzer izdavanjeMenadzer;
     private final PretplataMenadzer pretplataMenadzer;
+    private final IzvestajMenadzer izvestajMenadzer;
     private final CenovnikMenadzer cenovnikMenadzer;
     private final DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum;
     private final RezervacijaUslugaRepozitorijum rezervacijaUslugaRepozitorijum;
@@ -58,11 +60,14 @@ public class AplikacijaFrame extends JFrame {
                 "src/fajlovi/izdavanja.csv", rezervacije, korisnikRepozitorijum, vozila);
         rezervacijaMenadzer.setIzdavanjeRepozitorijum(izdavanja);
         izdavanjeMenadzer = new IzdavanjeMenadzer(izdavanja, rezervacije, vozila, cenovnikMenadzer);
+        PretplataRepozitorijum pretplate = new PretplataRepozitorijum("src/fajlovi/pretplate.csv",
+                korisnikRepozitorijum);
         pretplataMenadzer = new PretplataMenadzer(
-                new PretplataRepozitorijum("src/fajlovi/pretplate.csv", korisnikRepozitorijum),
+                pretplate,
                 new ZahtevPretplateRepozitorijum("src/fajlovi/zahtevi_pretplate.csv", korisnikRepozitorijum),
                 izdavanja,
                 cenovnikMenadzer);
+        izvestajMenadzer = new IzvestajMenadzer(korisnikRepozitorijum, rezervacije, izdavanja, pretplate, modeli);
         rezervacijaMenadzer.setPretplataMenadzer(pretplataMenadzer);
         dodatnaUslugaRepozitorijum = new DodatnaUslugaRepozitorijum();
         rezervacijaMenadzer.odbijIstekleRezervacije();
@@ -93,7 +98,7 @@ public class AplikacijaFrame extends JFrame {
     private void prikaziGlavniEkran() {
         if (ulogovaniKorisnik instanceof Administrator) {
             setContentPane(new AdministratorPanel(ulogovaniKorisnik, korisnikRepozitorijum,
-                    zaposleniMenadzer, cenovnikMenadzer, dodatnaUslugaRepozitorijum,
+                    zaposleniMenadzer, cenovnikMenadzer, izvestajMenadzer, dodatnaUslugaRepozitorijum,
                     this::prikaziGlavniEkran, this::prikaziLogin));
         } else if (ulogovaniKorisnik instanceof Agent) {
             rezervacijaMenadzer.odbijIstekleRezervacije();

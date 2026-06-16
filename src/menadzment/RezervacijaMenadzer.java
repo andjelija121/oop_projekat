@@ -203,6 +203,8 @@ public class RezervacijaMenadzer {
 
         if (!rezervacija.getDatumOd().isAfter(LocalDate.now())) {
             rezervacija.setStatus(StatusRezervacije.ODBIJENA);
+            rezervacija.setAgentObrade((Agent) ulogovaniKorisnik);
+            rezervacija.setDatumObrade(LocalDate.now());
             rezervacijaRepozitorijum.azuriraj(rezervacija);
             return false;
         }
@@ -213,6 +215,8 @@ public class RezervacijaMenadzer {
         }
 
         rezervacija.setStatus(StatusRezervacije.POTVRDJENA);
+        rezervacija.setAgentObrade((Agent) ulogovaniKorisnik);
+        rezervacija.setDatumObrade(LocalDate.now());
         rezervacijaRepozitorijum.azuriraj(rezervacija);
         return true;
     }
@@ -229,6 +233,8 @@ public class RezervacijaMenadzer {
         }
 
         rezervacija.setStatus(StatusRezervacije.ODBIJENA);
+        rezervacija.setAgentObrade((Agent) ulogovaniKorisnik);
+        rezervacija.setDatumObrade(LocalDate.now());
         rezervacijaRepozitorijum.azuriraj(rezervacija);
         return true;
     }

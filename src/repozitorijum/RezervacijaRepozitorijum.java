@@ -1,6 +1,7 @@
 package repozitorijum;
 
 import enums.StatusRezervacije;
+import model.Agent;
 import model.Rezervacija;
 
 import java.io.IOException;
@@ -116,30 +117,50 @@ public class RezervacijaRepozitorijum {
 
     private Rezervacija napraviRezervaciju(String linija) {
         String[] delovi = linija.split(",", -1);
+        LocalDate datumOd = LocalDate.parse(delovi[3]);
+        Agent agentObrade = delovi.length > 11 && !delovi[11].isBlank()
+                ? korisnikRepozitorijum.pronadjiAgentaPoId(Integer.parseInt(delovi[11]))
+                : null;
+        LocalDate datumKreiranja = delovi.length > 12 && !delovi[12].isBlank()
+                ? LocalDate.parse(delovi[12])
+                : datumOd;
+        LocalDate datumObrade = delovi.length > 13 && !delovi[13].isBlank()
+                ? LocalDate.parse(delovi[13])
+                : null;
 
         return new Rezervacija(
                 Integer.parseInt(delovi[0]),
                 korisnikRepozitorijum.pronadjiKlijentaPoId(Integer.parseInt(delovi[1])),
                 modelVozilaRepozitorijum.pronadjiPoId(Integer.parseInt(delovi[2])),
-                LocalDate.parse(delovi[3]),
+                datumOd,
                 LocalDate.parse(delovi[4]),
                 StatusRezervacije.valueOf(delovi[5]),
                 Double.parseDouble(delovi[6]),
                 Double.parseDouble(delovi[7]),
                 Double.parseDouble(delovi[8]),
                 Double.parseDouble(delovi[9]),
-                delovi.length > 10 && !delovi[10].isBlank() ? LocalDateTime.parse(delovi[10]) : null
+                delovi.length > 10 && !delovi[10].isBlank() ? LocalDateTime.parse(delovi[10]) : null,
+                agentObrade,
+                datumKreiranja,
+                datumObrade
         );
     }
 
     private String napraviCsvLiniju(Rezervacija rezervacija) {
         String vremeOtkazivanja = rezervacija.getVremeOtkazivanja() == null
                 ? "" : rezervacija.getVremeOtkazivanja().toString();
+        String agentObradeId = rezervacija.getAgentObrade() == null
+                ? "" : String.valueOf(rezervacija.getAgentObrade().getId());
+        String datumKreiranja = rezervacija.getDatumKreiranja() == null
+                ? "" : rezervacija.getDatumKreiranja().toString();
+        String datumObrade = rezervacija.getDatumObrade() == null
+                ? "" : rezervacija.getDatumObrade().toString();
 
         return rezervacija.getId() + "," + rezervacija.getKlijent().getId() + ","
                 + rezervacija.getModelVozila().getId() + ","
                 + rezervacija.getDatumOd() + "," + rezervacija.getDatumDo() + "," + rezervacija.getStatus() + ","
                 + rezervacija.getCenaNajma() + "," + rezervacija.getCenaDodatnihUsluga() + ","
-                + rezervacija.getKazna() + "," + rezervacija.getCenaUkupno() + "," + vremeOtkazivanja;
+                + rezervacija.getKazna() + "," + rezervacija.getCenaUkupno() + "," + vremeOtkazivanja + ","
+                + agentObradeId + "," + datumKreiranja + "," + datumObrade;
     }
 }

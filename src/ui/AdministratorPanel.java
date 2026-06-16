@@ -4,8 +4,10 @@ import enums.KategorijaKlijenta;
 import enums.KategorijaVozila;
 import enums.NivoSpreme;
 import enums.Pol;
+import enums.StatusRezervacije;
 import enums.TipCene;
 import menadzment.CenovnikMenadzer;
+import menadzment.IzvestajMenadzer;
 import menadzment.ZaposleniMenadzer;
 import model.Administrator;
 import model.Agent;
@@ -34,21 +36,26 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagLayout;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class AdministratorPanel extends JPanel {
     private final Korisnik administrator;
     private final KorisnikRepozitorijum korisnici;
     private final ZaposleniMenadzer zaposleniMenadzer;
     private final CenovnikMenadzer cenovnikMenadzer;
+    private final IzvestajMenadzer izvestajMenadzer;
     private final DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum;
     private final Runnable osvezi;
 
     public AdministratorPanel(Korisnik administrator, KorisnikRepozitorijum korisnici,
                               ZaposleniMenadzer zaposleniMenadzer,
                               CenovnikMenadzer cenovnikMenadzer,
+                              IzvestajMenadzer izvestajMenadzer,
                               DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum,
                               Runnable osvezi, Runnable odjava) {
         super(new BorderLayout());
@@ -56,11 +63,14 @@ public class AdministratorPanel extends JPanel {
         this.korisnici = korisnici;
         this.zaposleniMenadzer = zaposleniMenadzer;
         this.cenovnikMenadzer = cenovnikMenadzer;
+        this.izvestajMenadzer = izvestajMenadzer;
         this.dodatnaUslugaRepozitorijum = dodatnaUslugaRepozitorijum;
         this.osvezi = osvezi;
 
         JTabbedPane tabs = UiKomponente.tabovi();
         tabs.addTab("Zaposleni", zaposleniTabelaPanel());
+        tabs.addTab("Izvestaji", izvestajiPanel());
+        tabs.addTab("Chartovi", chartoviPanel());
         tabs.addTab("Dodaj zaposlenog", dodajZaposlenogPanel());
         tabs.addTab("Cenovnik", cenovnikPanel());
         tabs.addTab("Podesavanja", podesavanjaPanel());
@@ -87,6 +97,186 @@ public class AdministratorPanel extends JPanel {
         model.addRow(new Object[]{tip, zaposleni.getIme(), zaposleni.getPrezime(),
                 zaposleni.getNivoSpreme(), zaposleni.getGodineStaza(),
                 String.format("%.2f", zaposleni.getPlata())});
+    }
+
+    private JPanel izvestajiPanel() {
+        JPanel panel = UiKomponente.kartica(new BorderLayout(0, 12));
+        panel.add(UiKomponente.naslovSekcije("Izvestaji"), BorderLayout.NORTH);
+
+        JTextField datumOd = new JTextField(LocalDate.now().minusMonths(1).toString());
+        JTextField datumDo = new JTextField(LocalDate.now().toString());
+        JButton prikazi = UiKomponente.primarnoDugme("Prikazi");
+
+        JPanel filter = new JPanel(new GridBagLayout());
+        filter.setBackground(UiKomponente.PANEL);
+        int red = 0;
+        red = UiKomponente.dodajPolje(filter, red, "Datum od", datumOd);
+        UiKomponente.dodajPolje(filter, red, "Datum do", datumDo);
+
+        DefaultTableModel izdavanjaModel = UiKomponente.modelTabele(
+                new String[]{"Agent", "Broj izdavanja"});
+        DefaultTableModel rezervacijeModel = UiKomponente.modelTabele(
+                new String[]{"Status", "Broj rezervacija"});
+        DefaultTableModel modeliModel = UiKomponente.modelTabele(
+                new String[]{"Model", "Proizvodjac", "Kategorija", "Iznajmljivanja", "Rezervacije"});
+        DefaultTableModel finansijeModel = UiKomponente.modelTabele(
+                new String[]{"Stavka", "Iznos"});
+
+        prikazi.addActionListener(e -> {
+            try {
+                LocalDate od = LocalDate.parse(datumOd.getText().trim());
+                LocalDate doDatuma = LocalDate.parse(datumDo.getText().trim());
+                if (doDatuma.isBefore(od)) {
+                    JOptionPane.showMessageDialog(this, "Datum do ne sme biti pre datuma od.");
+                    return;
+                }
+                popuniIzvestaje(od, doDatuma, izdavanjaModel, rezervacijeModel, modeliModel, finansijeModel);
+            } catch (DateTimeParseException ex) {
+                JOptionPane.showMessageDialog(this, "Datumi moraju biti u formatu GGGG-MM-DD.");
+            }
+        });
+
+        JPanel filterPanel = new JPanel(new BorderLayout(8, 0));
+        filterPanel.setBackground(UiKomponente.PANEL);
+        filterPanel.add(filter, BorderLayout.CENTER);
+        filterPanel.add(prikazi, BorderLayout.EAST);
+
+        JTabbedPane taboviIzvestaja = UiKomponente.tabovi();
+        taboviIzvestaja.addTab("Izdavanja", new JScrollPane(UiKomponente.tabela(izdavanjaModel)));
+        taboviIzvestaja.addTab("Rezervacije", new JScrollPane(UiKomponente.tabela(rezervacijeModel)));
+        taboviIzvestaja.addTab("Modeli vozila", new JScrollPane(UiKomponente.tabela(modeliModel)));
+        taboviIzvestaja.addTab("Prihodi i rashodi", new JScrollPane(UiKomponente.tabela(finansijeModel)));
+
+        panel.add(filterPanel, BorderLayout.NORTH);
+        panel.add(taboviIzvestaja, BorderLayout.CENTER);
+        popuniIzvestaje(LocalDate.now().minusMonths(1), LocalDate.now(),
+                izdavanjaModel, rezervacijeModel, modeliModel, finansijeModel);
+        return panel;
+    }
+
+    private void popuniIzvestaje(LocalDate datumOd, LocalDate datumDo,
+                                 DefaultTableModel izdavanjaModel,
+                                 DefaultTableModel rezervacijeModel,
+                                 DefaultTableModel modeliModel,
+                                 DefaultTableModel finansijeModel) {
+        ocisti(izdavanjaModel);
+        ocisti(rezervacijeModel);
+        ocisti(modeliModel);
+        ocisti(finansijeModel);
+
+        for (IzvestajMenadzer.IzdavanjeAgenta red : izvestajMenadzer.izvestajIzdavanja(datumOd, datumDo)) {
+            izdavanjaModel.addRow(new Object[]{imePrezime(red.getAgent()), red.getBrojIzdavanja()});
+        }
+
+        IzvestajMenadzer.RezervacijeStatistika statusi = izvestajMenadzer.izvestajRezervacija(datumOd, datumDo);
+        rezervacijeModel.addRow(new Object[]{"POTVRDJENA", statusi.getPotvrdjene()});
+        rezervacijeModel.addRow(new Object[]{"ODBIJENA", statusi.getOdbijene()});
+        rezervacijeModel.addRow(new Object[]{"OTKAZANA", statusi.getOtkazane()});
+
+        for (IzvestajMenadzer.ModelVozilaStatistika red : izvestajMenadzer.izvestajModela(datumOd, datumDo)) {
+            modeliModel.addRow(new Object[]{red.getModel().getNaziv(), red.getModel().getProizvodjac(),
+                    red.getModel().getKategorijaVozila(), red.getBrojIznajmljivanja(), red.getBrojRezervacija()});
+        }
+
+        IzvestajMenadzer.PrihodiRashodi finansije = izvestajMenadzer.izvestajPrihodaIRashoda(datumOd, datumDo);
+        finansijeModel.addRow(new Object[]{"Pretplate", formatIznos(finansije.getPretplate())});
+        finansijeModel.addRow(new Object[]{"Najmovi vozila", formatIznos(finansije.getNajmovi())});
+        finansijeModel.addRow(new Object[]{"Dodatne usluge", formatIznos(finansije.getDodatneUsluge())});
+        finansijeModel.addRow(new Object[]{"Kazne", formatIznos(finansije.getKazne())});
+        finansijeModel.addRow(new Object[]{"Prihodi ukupno", formatIznos(finansije.getPrihodiUkupno())});
+        finansijeModel.addRow(new Object[]{"Rashodi - plate", formatIznos(finansije.getRashodi())});
+        finansijeModel.addRow(new Object[]{"Profit", formatIznos(finansije.getProfit())});
+    }
+
+    private JPanel chartoviPanel() {
+        JPanel panel = UiKomponente.kartica(new BorderLayout(0, 12));
+        panel.add(UiKomponente.naslovSekcije("Chartovi"), BorderLayout.NORTH);
+
+        JTabbedPane tabs = UiKomponente.tabovi();
+        tabs.addTab("Prihodi 12 meseci", prihodiChartPanel());
+        tabs.addTab("Rezervacije 30 dana", rezervacijeChartPanel());
+        panel.add(tabs, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel prihodiChartPanel() {
+        JPanel panel = UiKomponente.kartica(new BorderLayout(0, 10));
+        LinkedHashMap<YearMonth, LinkedHashMap<KategorijaKlijenta, Double>> podaci =
+                izvestajMenadzer.prihodiPoMesecimaIKategoriji();
+        ArrayList<String> meseci = new ArrayList<>();
+        ArrayList<String> kategorije = new ArrayList<>();
+        KategorijaKlijenta[] kategorijeEnum = KategorijaKlijenta.values();
+        double[][] vrednosti = new double[kategorijeEnum.length + 1][podaci.size()];
+        double ukupno = 0;
+
+        for (KategorijaKlijenta kategorija : kategorijeEnum) {
+            kategorije.add(nazivKategorije(kategorija));
+        }
+        kategorije.add("Ukupno");
+
+        int indeksMeseca = 0;
+        for (Map.Entry<YearMonth, LinkedHashMap<KategorijaKlijenta, Double>> entry : podaci.entrySet()) {
+            meseci.add(nazivMeseca(entry.getKey()));
+            double ukupnoMesec = 0;
+            for (int i = 0; i < kategorijeEnum.length; i++) {
+                double iznos = entry.getValue().get(kategorijeEnum[i]);
+                vrednosti[i][indeksMeseca] = iznos;
+                ukupnoMesec += iznos;
+                ukupno += iznos;
+            }
+            vrednosti[kategorijeEnum.length][indeksMeseca] = ukupnoMesec;
+            indeksMeseca++;
+        }
+
+        JLabel ukupnoLabel = new JLabel("Ukupan prihod: " + formatIznos(ukupno));
+        ukupnoLabel.setFont(ukupnoLabel.getFont().deriveFont(Font.BOLD));
+        panel.add(ukupnoLabel, BorderLayout.NORTH);
+        panel.add(new JScrollPane(new LineChartPanel("Prihodi po kategoriji klijenta",
+                meseci, kategorije, vrednosti)), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel rezervacijeChartPanel() {
+        JPanel panel = UiKomponente.kartica(new BorderLayout(0, 12));
+        JPanel sadrzaj = new JPanel(new GridBagLayout());
+        sadrzaj.setBackground(UiKomponente.PANEL);
+
+        LinkedHashMap<Agent, Integer> agenti = izvestajMenadzer.opterecenjeAgenataZaPrethodnih30Dana();
+        ArrayList<String> agentLabels = new ArrayList<>();
+        ArrayList<Double> agentValues = new ArrayList<>();
+        for (Map.Entry<Agent, Integer> entry : agenti.entrySet()) {
+            agentLabels.add(imePrezime(entry.getKey()));
+            agentValues.add((double) entry.getValue());
+        }
+
+        IzvestajMenadzer.RezervacijeStatistika statusi =
+                izvestajMenadzer.statusiRezervacijaKreiranihZaPrethodnih30Dana();
+        ArrayList<String> statusLabels = new ArrayList<>();
+        ArrayList<Double> statusValues = new ArrayList<>();
+        statusLabels.add("NA_CEKANJU");
+        statusValues.add((double) statusi.getNaCekanju());
+        statusLabels.add("POTVRDJENA");
+        statusValues.add((double) statusi.getPotvrdjene());
+        statusLabels.add("ODBIJENA");
+        statusValues.add((double) statusi.getOdbijene());
+        statusLabels.add("OTKAZANA");
+        statusValues.add((double) statusi.getOtkazane());
+
+        java.awt.GridBagConstraints gbc = new java.awt.GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1;
+        gbc.fill = java.awt.GridBagConstraints.BOTH;
+        gbc.insets = new java.awt.Insets(12, 12, 12, 12);
+        sadrzaj.add(new PieChartPanel("Status rezervacija u prethodnih 30 dana",
+                statusLabels, statusValues), gbc);
+
+        gbc.gridx = 1;
+        sadrzaj.add(new PieChartPanel("Opterecenje agenata u prethodnih 30 dana",
+                agentLabels, agentValues), gbc);
+
+        panel.add(new JScrollPane(sadrzaj), BorderLayout.CENTER);
+        return panel;
     }
 
     private JPanel dodajZaposlenogPanel() {
@@ -150,6 +340,36 @@ public class AdministratorPanel extends JPanel {
         panel.add(forma, BorderLayout.CENTER);
         panel.add(sacuvaj, BorderLayout.SOUTH);
         return panel;
+    }
+
+    private void ocisti(DefaultTableModel model) {
+        model.setRowCount(0);
+    }
+
+    private String imePrezime(Korisnik korisnik) {
+        return korisnik == null ? "" : korisnik.getIme() + " " + korisnik.getPrezime();
+    }
+
+    private String formatIznos(double iznos) {
+        return String.format("%.2f", iznos);
+    }
+
+    private String nazivKategorije(KategorijaKlijenta kategorija) {
+        if (kategorija == KategorijaKlijenta.STUDENT) {
+            return "Student";
+        } else if (kategorija == KategorijaKlijenta.PENZIONER) {
+            return "Penzioner";
+        } else if (kategorija == KategorijaKlijenta.FIRMA) {
+            return "Firma";
+        }
+
+        return "Bez kategorije";
+    }
+
+    private String nazivMeseca(YearMonth mesec) {
+        String[] nazivi = {"Januar", "Februar", "Mart", "April", "Maj", "Jun",
+                "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"};
+        return nazivi[mesec.getMonthValue() - 1];
     }
 
     private JPanel cenovnikPanel() {

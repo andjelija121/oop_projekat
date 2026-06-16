@@ -8,9 +8,12 @@ import java.time.LocalDateTime;
 public class Rezervacija {
     private int id;
     private Klijent klijent;
+    private Agent agentObrade;
     private ModelVozila modelVozila;
     private LocalDate datumOd;
     private LocalDate datumDo;
+    private LocalDate datumKreiranja;
+    private LocalDate datumObrade;
     private StatusRezervacije status;
     private double cenaNajma;
     private double cenaDodatnihUsluga;
@@ -22,17 +25,28 @@ public class Rezervacija {
                        StatusRezervacije status, double cenaNajma, double cenaDodatnihUsluga,
                        double kazna, double cenaUkupno) {
         this(id, klijent, modelVozila, datumOd, datumDo, status, cenaNajma, cenaDodatnihUsluga,
-                kazna, cenaUkupno, null);
+                kazna, cenaUkupno, null, null, LocalDate.now(), null);
     }
 
     public Rezervacija(int id, Klijent klijent, ModelVozila modelVozila, LocalDate datumOd, LocalDate datumDo,
                        StatusRezervacije status, double cenaNajma, double cenaDodatnihUsluga,
                        double kazna, double cenaUkupno, LocalDateTime vremeOtkazivanja) {
+        this(id, klijent, modelVozila, datumOd, datumDo, status, cenaNajma, cenaDodatnihUsluga,
+                kazna, cenaUkupno, vremeOtkazivanja, null, LocalDate.now(), null);
+    }
+
+    public Rezervacija(int id, Klijent klijent, ModelVozila modelVozila, LocalDate datumOd, LocalDate datumDo,
+                       StatusRezervacije status, double cenaNajma, double cenaDodatnihUsluga,
+                       double kazna, double cenaUkupno, LocalDateTime vremeOtkazivanja,
+                       Agent agentObrade, LocalDate datumKreiranja, LocalDate datumObrade) {
         this.id = id;
         this.klijent = klijent;
+        this.agentObrade = agentObrade;
         this.modelVozila = modelVozila;
         this.datumOd = datumOd;
         this.datumDo = datumDo;
+        this.datumKreiranja = datumKreiranja;
+        this.datumObrade = datumObrade;
         this.status = status;
         this.cenaNajma = cenaNajma;
         this.cenaDodatnihUsluga = cenaDodatnihUsluga;
@@ -49,6 +63,14 @@ public class Rezervacija {
         return klijent;
     }
 
+    public Agent getAgentObrade() {
+        return agentObrade;
+    }
+
+    public void setAgentObrade(Agent agentObrade) {
+        this.agentObrade = agentObrade;
+    }
+
     public ModelVozila getModelVozila() {
         return modelVozila;
     }
@@ -59,6 +81,22 @@ public class Rezervacija {
 
     public LocalDate getDatumDo() {
         return datumDo;
+    }
+
+    public LocalDate getDatumKreiranja() {
+        return datumKreiranja;
+    }
+
+    public void setDatumKreiranja(LocalDate datumKreiranja) {
+        this.datumKreiranja = datumKreiranja;
+    }
+
+    public LocalDate getDatumObrade() {
+        return datumObrade;
+    }
+
+    public void setDatumObrade(LocalDate datumObrade) {
+        this.datumObrade = datumObrade;
     }
 
     public StatusRezervacije getStatus() {
