@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class CenovnikRepozitorijum {
     private String putanjaDoFajla;
@@ -79,5 +80,51 @@ public class CenovnikRepozitorijum {
         }
 
         return null;
+    }
+
+    public void sacuvajSve(ArrayList<Cenovnik> cenovnici) {
+        try {
+            ArrayList<Cenovnik> sortirani = new ArrayList<>(cenovnici);
+            sortirani.sort(Comparator.comparing(Cenovnik::getDatumOd));
+
+            ArrayList<String> linije = new ArrayList<>();
+            linije.add("id,tip,cena,kategorijaVozila,kategorijaKlijenta,dodatnaUslugaId,datumOd,datumDo");
+
+            int redniBroj = 1;
+            for (Cenovnik cenovnik : sortirani) {
+                for (StavkaCenovnika stavka : cenovnik.getStavke()) {
+                    linije.add(napraviCsvLiniju(redniBroj, stavka, cenovnik));
+                    redniBroj++;
+                }
+            }
+
+            Files.write(Path.of(putanjaDoFajla), linije);
+        } catch (IOException e) {
+            System.out.println("Greska prilikom cuvanja fajla: " + putanjaDoFajla);
+        }
+    }
+
+    public int sledeciId() {
+        int najveciId = 0;
+
+        for (Cenovnik cenovnik : ucitajSve()) {
+            if (cenovnik.getId() > najveciId) {
+                najveciId = cenovnik.getId();
+            }
+        }
+
+        return najveciId + 1;
+    }
+
+    private String napraviCsvLiniju(int redniBroj, StavkaCenovnika stavka, Cenovnik cenovnik) {
+        String kategorijaVozila = stavka.getKategorijaVozila() == null ? "" : stavka.getKategorijaVozila().name();
+        String kategorijaKlijenta = stavka.getKategorijaKlijenta() == null ? ""
+                : stavka.getKategorijaKlijenta().name();
+        String dodatnaUslugaId = stavka.getDodatnaUsluga() == null ? ""
+                : String.valueOf(stavka.getDodatnaUsluga().getId());
+
+        return redniBroj + "," + stavka.getTipCene() + "," + stavka.getVrednost() + ","
+                + kategorijaVozila + "," + kategorijaKlijenta + "," + dodatnaUslugaId + ","
+                + cenovnik.getDatumOd() + "," + cenovnik.getDatumDo();
     }
 }

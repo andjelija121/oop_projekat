@@ -28,6 +28,10 @@ public class Cenovnik {
         return datumDo;
     }
 
+    public void setDatumDo(LocalDate datumDo) {
+        this.datumDo = datumDo;
+    }
+
     public ArrayList<StavkaCenovnika> getStavke() {
         return stavke;
     }

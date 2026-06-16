@@ -93,7 +93,8 @@ public class AplikacijaFrame extends JFrame {
     private void prikaziGlavniEkran() {
         if (ulogovaniKorisnik instanceof Administrator) {
             setContentPane(new AdministratorPanel(ulogovaniKorisnik, korisnikRepozitorijum,
-                    zaposleniMenadzer, this::prikaziGlavniEkran, this::prikaziLogin));
+                    zaposleniMenadzer, cenovnikMenadzer, dodatnaUslugaRepozitorijum,
+                    this::prikaziGlavniEkran, this::prikaziLogin));
         } else if (ulogovaniKorisnik instanceof Agent) {
             rezervacijaMenadzer.odbijIstekleRezervacije();
             setContentPane(new AgentPanel(ulogovaniKorisnik, korisnikRepozitorijum, klijentMenadzer,
