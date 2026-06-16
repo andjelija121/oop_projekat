@@ -52,6 +52,16 @@ public class PretplataRepozitorijum {
         return rezultat;
     }
 
+    public Pretplata pronadjiPoId(int id) {
+        for (Pretplata pretplata : ucitajSve()) {
+            if (pretplata.getId() == id) {
+                return pretplata;
+            }
+        }
+
+        return null;
+    }
+
     public void dodaj(Pretplata pretplata) {
         try {
             ArrayList<String> linije = new ArrayList<>(Files.readAllLines(Path.of(putanjaDoFajla)));
@@ -83,6 +93,28 @@ public class PretplataRepozitorijum {
             Files.write(Path.of(putanjaDoFajla), linije);
         } catch (IOException e) {
             System.out.println("Greska prilikom azuriranja pretplate u fajlu: " + putanjaDoFajla);
+        }
+    }
+
+    public void obrisi(int id) {
+        try {
+            ArrayList<String> linije = new ArrayList<>(Files.readAllLines(Path.of(putanjaDoFajla)));
+            for (int i = linije.size() - 1; i >= 1; i--) {
+                if (linije.get(i).isBlank()) {
+                    linije.remove(i);
+                    continue;
+                }
+
+                String[] delovi = linije.get(i).split(",", -1);
+                if (Integer.parseInt(delovi[0]) == id) {
+                    linije.remove(i);
+                    break;
+                }
+            }
+
+            Files.write(Path.of(putanjaDoFajla), linije);
+        } catch (IOException e) {
+            System.out.println("Greska prilikom brisanja pretplate iz fajla: " + putanjaDoFajla);
         }
     }
 

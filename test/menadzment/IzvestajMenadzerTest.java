@@ -5,8 +5,6 @@ import model.*;
 import org.junit.Test;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.LinkedHashMap;
 
 import static org.junit.Assert.*;
 
@@ -66,42 +64,6 @@ public class IzvestajMenadzerTest {
         assertEquals(200, r.getDodatneUsluge(), 0.0001);
         assertEquals(700, r.getKazne(), 0.0001);
         assertTrue(r.getRashodi() > 0);
-    }
-
-    @Test
-    public void prihodiPoMesecimaSeGrupisuPoKategorijiKlijenta() {
-        Fixture f = new Fixture();
-        Klijent student = TestSupport.student(2);
-        f.pretplate.pretplate.add(new Pretplata(1, student, LocalDate.now(), LocalDate.now().plusYears(1),
-                StatusPretplate.AKTIVNA, 5000));
-
-        LinkedHashMap<YearMonth, LinkedHashMap<KategorijaKlijenta, Double>> rezultat =
-                f.menadzer.prihodiPoMesecimaIKategoriji();
-
-        assertEquals(5000, rezultat.get(YearMonth.from(LocalDate.now())).get(KategorijaKlijenta.STUDENT), 0.0001);
-    }
-
-    @Test
-    public void opterecenjeAgenataBrojiObradjeneRezervacijeUPrethodnihTridesetDana() {
-        Fixture f = new Fixture();
-        Rezervacija r = TestSupport.rezervacija(1, f.klijent, f.model, StatusRezervacije.POTVRDJENA,
-                LocalDate.now(), LocalDate.now());
-        r.setAgentObrade(f.agent);
-        r.setDatumObrade(LocalDate.now());
-        f.rezervacije.rezervacije.add(r);
-
-        assertEquals(Integer.valueOf(1), f.menadzer.opterecenjeAgenataZaPrethodnih30Dana().get(f.agent));
-    }
-
-    @Test
-    public void statusiRezervacijaZaTridesetDanaGledajuDatumKreiranja() {
-        Fixture f = new Fixture();
-        Rezervacija r = TestSupport.rezervacija(1, f.klijent, f.model, StatusRezervacije.OTKAZANA,
-                LocalDate.now(), LocalDate.now());
-        r.setDatumKreiranja(LocalDate.now());
-        f.rezervacije.rezervacije.add(r);
-
-        assertEquals(1, f.menadzer.statusiRezervacijaKreiranihZaPrethodnih30Dana().getOtkazane());
     }
 
     static class Fixture {

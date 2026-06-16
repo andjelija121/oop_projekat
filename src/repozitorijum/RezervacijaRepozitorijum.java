@@ -103,6 +103,28 @@ public class RezervacijaRepozitorijum {
         }
     }
 
+    public void obrisi(int id) {
+        try {
+            ArrayList<String> linije = new ArrayList<>(Files.readAllLines(Path.of(putanjaDoFajla)));
+            for (int i = linije.size() - 1; i >= 1; i--) {
+                if (linije.get(i).isBlank()) {
+                    linije.remove(i);
+                    continue;
+                }
+
+                String[] delovi = linije.get(i).split(",", -1);
+                if (Integer.parseInt(delovi[0]) == id) {
+                    linije.remove(i);
+                    break;
+                }
+            }
+
+            Files.write(Path.of(putanjaDoFajla), linije);
+        } catch (IOException e) {
+            System.out.println("Greska prilikom brisanja rezervacije iz fajla: " + putanjaDoFajla);
+        }
+    }
+
     public int sledeciId() {
         int najveciId = 0;
 

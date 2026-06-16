@@ -379,6 +379,7 @@ public class IzvestajMenadzer {
         private int potvrdjene;
         private int odbijene;
         private int otkazane;
+        private int zavrsene;
 
         public void dodaj(StatusRezervacije status) {
             if (status == StatusRezervacije.NA_CEKANJU) {
@@ -389,6 +390,8 @@ public class IzvestajMenadzer {
                 odbijene++;
             } else if (status == StatusRezervacije.OTKAZANA) {
                 otkazane++;
+            } else if (status == StatusRezervacije.ZAVRSENA) {
+                zavrsene++;
             }
         }
 
@@ -406,6 +409,10 @@ public class IzvestajMenadzer {
 
         public int getOtkazane() {
             return otkazane;
+        }
+
+        public int getZavrsene() {
+            return zavrsene;
         }
     }
 }

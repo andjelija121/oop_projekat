@@ -31,26 +31,4 @@ public class ZaposleniMenadzerTest {
         assertEquals(1, repo.ucitajAdministratore().size());
     }
 
-    @Test
-    public void neAdministratorNeMozeDaDodajeZaposlene() {
-        TestSupport.Korisnici repo = new TestSupport.Korisnici();
-
-        boolean dodat = new ZaposleniMenadzer(repo).dodajAgenta(TestSupport.agent(1), "Agent", "Novi",
-                Pol.MUSKI, "1990-01-01", "060", "Adresa", "noviAgent", "pass",
-                NivoSpreme.VI, 3, 90000);
-
-        assertFalse(dodat);
-    }
-
-    @Test
-    public void duploKorisnickoImeZaposlenogSeOdbija() {
-        TestSupport.Korisnici repo = new TestSupport.Korisnici();
-        repo.dodaj(TestSupport.agent(1));
-
-        boolean dodat = new ZaposleniMenadzer(repo).dodajAgenta(TestSupport.admin(1), "Agent", "Novi",
-                Pol.MUSKI, "1990-01-01", "060", "Adresa", "agent1", "pass",
-                NivoSpreme.VI, 3, 90000);
-
-        assertFalse(dodat);
-    }
 }

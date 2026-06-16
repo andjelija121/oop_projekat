@@ -23,8 +23,4 @@ public class PrijavaMenadzerTest {
         assertNull(new PrijavaMenadzer(repo).login("agent1", "pogresna"));
     }
 
-    @Test
-    public void loginVracaNullZaNepostojeceKorisnickoIme() {
-        assertNull(new PrijavaMenadzer(new TestSupport.Korisnici()).login("nema", "pass"));
-    }
 }

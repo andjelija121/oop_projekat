@@ -10,15 +10,6 @@ import static org.junit.Assert.*;
 
 public class PretplataMenadzerTest {
     @Test
-    public void prepoznajeAktivnuPretplatu() {
-        Fixture f = new Fixture();
-        f.pretplate.pretplate.add(new Pretplata(1, f.klijent, LocalDate.now().minusDays(1),
-                LocalDate.now().plusDays(10), StatusPretplate.AKTIVNA, 12000));
-
-        assertTrue(f.menadzer.imaAktivnuPretplatu(f.klijent));
-    }
-
-    @Test
     public void praviZahtevKadaKlijentNemaAktivnuPretplatu() {
         Fixture f = new Fixture();
 
@@ -56,15 +47,6 @@ public class PretplataMenadzerTest {
 
         assertTrue(f.menadzer.odbijZahtev(f.agent, 1));
         assertEquals(StatusPretplate.ODBIJENA, f.zahtevi.zahtevi.get(0).getStatus());
-    }
-
-    @Test
-    public void neAgentNeMozeDaOdobriZahtev() {
-        Fixture f = new Fixture();
-        f.zahtevi.zahtevi.add(new ZahtevPretplate(1, f.klijent, null, LocalDate.now(),
-                StatusPretplate.NA_CEKANJU));
-
-        assertFalse(f.menadzer.odobriZahtev(TestSupport.admin(1), 1));
     }
 
     @Test

@@ -22,6 +22,12 @@ public class RezervacijaUslugaRepozitorijum {
         this.dodatnaUslugaRepozitorijum = new DodatnaUslugaRepozitorijum();
     }
 
+    public RezervacijaUslugaRepozitorijum(String putanjaDoFajla,
+                                          DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum) {
+        this.putanjaDoFajla = putanjaDoFajla;
+        this.dodatnaUslugaRepozitorijum = dodatnaUslugaRepozitorijum;
+    }
+
     public ArrayList<RezervacijaUsluga> ucitajSve() {
         ArrayList<RezervacijaUsluga> rezervacijaUsluge = new ArrayList<>();
 
@@ -54,6 +60,16 @@ public class RezervacijaUslugaRepozitorijum {
         return rezultat;
     }
 
+    public RezervacijaUsluga pronadjiPoId(int id) {
+        for (RezervacijaUsluga rezervacijaUsluga : ucitajSve()) {
+            if (rezervacijaUsluga.getId() == id) {
+                return rezervacijaUsluga;
+            }
+        }
+
+        return null;
+    }
+
     public void dodaj(RezervacijaUsluga rezervacijaUsluga) {
         try {
             Path putanja = Path.of(putanjaDoFajla);
@@ -63,6 +79,50 @@ public class RezervacijaUslugaRepozitorijum {
             Files.write(putanja, linije);
         } catch (IOException e) {
             System.out.println("Greska prilikom cuvanja usluge rezervacije u fajl: " + putanjaDoFajla);
+        }
+    }
+
+    public void azuriraj(RezervacijaUsluga rezervacijaUsluga) {
+        try {
+            ArrayList<String> linije = new ArrayList<>(Files.readAllLines(Path.of(putanjaDoFajla)));
+            for (int i = 1; i < linije.size(); i++) {
+                if (linije.get(i).isBlank()) {
+                    continue;
+                }
+
+                String[] delovi = linije.get(i).split(",", -1);
+                if (Integer.parseInt(delovi[0]) == rezervacijaUsluga.getId()) {
+                    linije.set(i, napraviCsvLiniju(rezervacijaUsluga));
+                    break;
+                }
+            }
+
+            linije.removeIf(String::isBlank);
+            Files.write(Path.of(putanjaDoFajla), linije);
+        } catch (IOException e) {
+            System.out.println("Greska prilikom azuriranja usluge rezervacije u fajlu: " + putanjaDoFajla);
+        }
+    }
+
+    public void obrisi(int id) {
+        try {
+            ArrayList<String> linije = new ArrayList<>(Files.readAllLines(Path.of(putanjaDoFajla)));
+            for (int i = linije.size() - 1; i >= 1; i--) {
+                if (linije.get(i).isBlank()) {
+                    linije.remove(i);
+                    continue;
+                }
+
+                String[] delovi = linije.get(i).split(",", -1);
+                if (Integer.parseInt(delovi[0]) == id) {
+                    linije.remove(i);
+                    break;
+                }
+            }
+
+            Files.write(Path.of(putanjaDoFajla), linije);
+        } catch (IOException e) {
+            System.out.println("Greska prilikom brisanja usluge rezervacije iz fajla: " + putanjaDoFajla);
         }
     }
 

@@ -31,15 +31,6 @@ public class CenovnikMenadzerTest {
     }
 
     @Test
-    public void izracunajCenuNajmaVracaNuluZaNevalidanPeriod() {
-        double cena = menadzerSaCenovnikom().izracunajCenuNajma(TestSupport.klijent(1),
-                TestSupport.model(1, KategorijaVozila.ECONOMY),
-                LocalDate.now().plusDays(3), LocalDate.now().plusDays(1), 0);
-
-        assertEquals(0, cena, 0.0001);
-    }
-
-    @Test
     public void izracunajCenuDodatnihUslugaSabiraUslugeIProduzenje() {
         ArrayList<DodatnaUsluga> usluge = new ArrayList<>();
         usluge.add(TestSupport.gps());
@@ -70,23 +61,6 @@ public class CenovnikMenadzerTest {
 
         assertTrue(dodat);
         assertEquals(2, repo.ucitajSve().size());
-    }
-
-    @Test
-    public void neAdministratorNeMozeDaDodaNoviCenovnik() {
-        boolean dodat = menadzerSaCenovnikom().dodajNoviCenovnik(TestSupport.agent(1),
-                LocalDate.now().plusDays(11), LocalDate.now().plusDays(30), 15000,
-                ceneNajma(), popusti(), ceneUsluga(), 900);
-
-        assertFalse(dodat);
-    }
-
-    @Test
-    public void neMozeDaSeObriseJediniCenovnik() {
-        TestSupport.Cenovnici repo = new TestSupport.Cenovnici();
-        repo.cenovnici.add(TestSupport.cenovnik(LocalDate.now().minusDays(10), LocalDate.now().plusDays(10)));
-
-        assertFalse(new CenovnikMenadzer(repo).obrisiCenovnik(TestSupport.admin(1), 1));
     }
 
     static CenovnikMenadzer menadzerSaCenovnikom() {

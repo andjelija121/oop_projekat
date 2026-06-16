@@ -4,3 +4,8 @@ id,naziv,proizvodjac,kategorijaVozila
 3,Passat,Volkswagen,FAMILY
 4,A6,Audi,LUXURY
 5,Clio,Renault,ECONOMY
+6,Corolla,Toyota,STANDARD
+7,Octavia,Skoda,FAMILY
+8,Serija 5,BMW,LUXURY
+9,Yaris,Toyota,ECONOMY
+10,Tucson,Hyundai,FAMILY

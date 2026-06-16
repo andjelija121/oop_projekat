@@ -178,6 +178,7 @@ public class AdministratorPanel extends JPanel {
         rezervacijeModel.addRow(new Object[]{"POTVRDJENA", statusi.getPotvrdjene()});
         rezervacijeModel.addRow(new Object[]{"ODBIJENA", statusi.getOdbijene()});
         rezervacijeModel.addRow(new Object[]{"OTKAZANA", statusi.getOtkazane()});
+        rezervacijeModel.addRow(new Object[]{"ZAVRSENA", statusi.getZavrsene()});
 
         for (IzvestajMenadzer.ModelVozilaStatistika red : izvestajMenadzer.izvestajModela(datumOd, datumDo)) {
             modeliModel.addRow(new Object[]{red.getModel().getNaziv(), red.getModel().getProizvodjac(),
@@ -267,6 +268,8 @@ public class AdministratorPanel extends JPanel {
         statusValues.add((double) statusi.getOdbijene());
         statusLabels.add("OTKAZANA");
         statusValues.add((double) statusi.getOtkazane());
+        statusLabels.add("ZAVRSENA");
+        statusValues.add((double) statusi.getZavrsene());
 
         java.awt.GridBagConstraints gbc = new java.awt.GridBagConstraints();
         gbc.gridx = 0;
@@ -402,6 +405,8 @@ public class AdministratorPanel extends JPanel {
         entiteti.add(new CsvEntitet("Modeli vozila", "src/fajlovi/modeli_vozila.csv"));
         entiteti.add(new CsvEntitet("Vozila", "src/fajlovi/vozila.csv"));
         entiteti.add(new CsvEntitet("Dodatne usluge", "src/fajlovi/dodatne_usluge.csv"));
+        entiteti.add(new CsvEntitet("Cenovnik", "src/fajlovi/cenovnik.csv"));
+        entiteti.add(new CsvEntitet("Podesavanja", "src/fajlovi/podesavanja.csv"));
         return entiteti;
     }
 

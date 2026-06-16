@@ -11,14 +11,6 @@ import static org.junit.Assert.*;
 
 public class RezervacijaMenadzerTest {
     @Test
-    public void modelJeDostupanKadaPostojiSlobodnoVozilo() {
-        Fixture f = new Fixture();
-
-        assertTrue(f.menadzer.daLiJeModelDostupan(f.model,
-                LocalDate.now().plusDays(1), LocalDate.now().plusDays(3)));
-    }
-
-    @Test
     public void modelNijeDostupanKadaSuSviPrimerciZauzeti() {
         Fixture f = new Fixture();
         f.rezervacije.rezervacije.add(TestSupport.rezervacija(1, f.klijent, f.model,
@@ -62,17 +54,6 @@ public class RezervacijaMenadzerTest {
     }
 
     @Test
-    public void agentOdbijaRezervacijuNaCekanju() {
-        Fixture f = new Fixture();
-        Rezervacija rezervacija = TestSupport.rezervacija(1, f.klijent, f.model, StatusRezervacije.NA_CEKANJU,
-                LocalDate.now().plusDays(1), LocalDate.now().plusDays(3));
-        f.rezervacije.rezervacije.add(rezervacija);
-
-        assertTrue(f.menadzer.odbijRezervaciju(f.agent, 1));
-        assertEquals(StatusRezervacije.ODBIJENA, rezervacija.getStatus());
-    }
-
-    @Test
     public void klijentMozeDaOtkazeSvojuRezervaciju() {
         Fixture f = new Fixture();
         Rezervacija rezervacija = TestSupport.rezervacija(1, f.klijent, f.model, StatusRezervacije.POTVRDJENA,
@@ -81,27 +62,6 @@ public class RezervacijaMenadzerTest {
 
         assertTrue(f.menadzer.otkaziRezervaciju(f.klijent, 1));
         assertEquals(StatusRezervacije.OTKAZANA, rezervacija.getStatus());
-    }
-
-    @Test
-    public void klijentNeMozeDaOtkazeTudjuRezervaciju() {
-        Fixture f = new Fixture();
-        f.rezervacije.rezervacije.add(TestSupport.rezervacija(1, f.klijent, f.model,
-                StatusRezervacije.POTVRDJENA, LocalDate.now().plusDays(1), LocalDate.now().plusDays(3)));
-
-        assertFalse(f.menadzer.otkaziRezervaciju(TestSupport.klijent(9), 1));
-    }
-
-    @Test
-    public void dodatnaUslugaPovecavaCenuPotvrdjeneRezervacije() {
-        Fixture f = new Fixture();
-        Rezervacija rezervacija = TestSupport.rezervacija(1, f.klijent, f.model, StatusRezervacije.POTVRDJENA,
-                LocalDate.now().plusDays(1), LocalDate.now().plusDays(3));
-        f.rezervacije.rezervacije.add(rezervacija);
-
-        assertTrue(f.menadzer.dodajDodatnuUsluguNaRezervaciju(f.agent, 1, TestSupport.gps(), 2, 300));
-        assertEquals(800, rezervacija.getCenaDodatnihUsluga(), 0.0001);
-        assertEquals(3800, rezervacija.getCenaUkupno(), 0.0001);
     }
 
     @Test

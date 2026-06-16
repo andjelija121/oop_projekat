@@ -22,6 +22,12 @@ public class CenovnikRepozitorijum {
         this.putanjaDoFajla = "src/fajlovi/cenovnik.csv";
         this.dodatnaUslugaRepozitorijum = new DodatnaUslugaRepozitorijum();
     }
+
+    public CenovnikRepozitorijum(String putanjaDoFajla, DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum) {
+        this.putanjaDoFajla = putanjaDoFajla;
+        this.dodatnaUslugaRepozitorijum = dodatnaUslugaRepozitorijum;
+    }
+
     public ArrayList<Cenovnik> ucitajSve() {
         ArrayList<Cenovnik> cenovnici = new ArrayList<>();
         try{
@@ -82,6 +88,44 @@ public class CenovnikRepozitorijum {
         return null;
     }
 
+    public Cenovnik pronadjiPoId(int id) {
+        for (Cenovnik cenovnik : ucitajSve()) {
+            if (cenovnik.getId() == id) {
+                return cenovnik;
+            }
+        }
+
+        return null;
+    }
+
+    public void dodaj(Cenovnik cenovnik) {
+        ArrayList<Cenovnik> cenovnici = ucitajSve();
+        cenovnici.add(cenovnik);
+        sacuvajSve(cenovnici);
+    }
+
+    public void azuriraj(Cenovnik cenovnik) {
+        ArrayList<Cenovnik> cenovnici = ucitajSve();
+        for (int i = 0; i < cenovnici.size(); i++) {
+            if (cenovnici.get(i).getId() == cenovnik.getId()) {
+                cenovnici.set(i, cenovnik);
+                break;
+            }
+        }
+        sacuvajSve(cenovnici);
+    }
+
+    public void obrisi(int id) {
+        ArrayList<Cenovnik> cenovnici = ucitajSve();
+        for (int i = cenovnici.size() - 1; i >= 0; i--) {
+            if (cenovnici.get(i).getId() == id) {
+                cenovnici.remove(i);
+                break;
+            }
+        }
+        sacuvajSve(cenovnici);
+    }
+
     public void sacuvajSve(ArrayList<Cenovnik> cenovnici) {
         try {
             ArrayList<Cenovnik> sortirani = new ArrayList<>(cenovnici);
@@ -90,11 +134,9 @@ public class CenovnikRepozitorijum {
             ArrayList<String> linije = new ArrayList<>();
             linije.add("id,tip,cena,kategorijaVozila,kategorijaKlijenta,dodatnaUslugaId,datumOd,datumDo");
 
-            int redniBroj = 1;
             for (Cenovnik cenovnik : sortirani) {
                 for (StavkaCenovnika stavka : cenovnik.getStavke()) {
-                    linije.add(napraviCsvLiniju(redniBroj, stavka, cenovnik));
-                    redniBroj++;
+                    linije.add(napraviCsvLiniju(stavka, cenovnik));
                 }
             }
 
@@ -116,14 +158,14 @@ public class CenovnikRepozitorijum {
         return najveciId + 1;
     }
 
-    private String napraviCsvLiniju(int redniBroj, StavkaCenovnika stavka, Cenovnik cenovnik) {
+    private String napraviCsvLiniju(StavkaCenovnika stavka, Cenovnik cenovnik) {
         String kategorijaVozila = stavka.getKategorijaVozila() == null ? "" : stavka.getKategorijaVozila().name();
         String kategorijaKlijenta = stavka.getKategorijaKlijenta() == null ? ""
                 : stavka.getKategorijaKlijenta().name();
         String dodatnaUslugaId = stavka.getDodatnaUsluga() == null ? ""
                 : String.valueOf(stavka.getDodatnaUsluga().getId());
 
-        return redniBroj + "," + stavka.getTipCene() + "," + stavka.getVrednost() + ","
+        return cenovnik.getId() + "," + stavka.getTipCene() + "," + stavka.getVrednost() + ","
                 + kategorijaVozila + "," + kategorijaKlijenta + "," + dodatnaUslugaId + ","
                 + cenovnik.getDatumOd() + "," + cenovnik.getDatumDo();
     }

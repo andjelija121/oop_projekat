@@ -96,6 +96,16 @@ public class KorisnikRepozitorijum {
         return null;
     }
 
+    public Korisnik pronadjiPoId(int id) {
+        for (Korisnik korisnik : ucitajSve()) {
+            if (korisnik.getId() == id) {
+                return korisnik;
+            }
+        }
+
+        return null;
+    }
+
     public Agent pronadjiAgentaPoId(int id) {
         for (Agent agent : ucitajAgente()) {
             if (agent.getId() == id) {
@@ -122,6 +132,51 @@ public class KorisnikRepozitorijum {
             Files.writeString(Path.of(putanjaDoFajla), System.lineSeparator() + linija, StandardOpenOption.APPEND);
         } catch (IOException e) {
             System.out.println("Greska prilikom cuvanja korisnika u fajl: " + putanjaDoFajla);
+        }
+    }
+
+    public void azuriraj(Korisnik korisnik) {
+        try {
+            ArrayList<String> linije = new ArrayList<>(Files.readAllLines(Path.of(putanjaDoFajla)));
+
+            for (int i = 1; i < linije.size(); i++) {
+                if (linije.get(i).isBlank()) {
+                    continue;
+                }
+
+                String[] delovi = linije.get(i).split(",", -1);
+                if (Integer.parseInt(delovi[0]) == korisnik.getId()) {
+                    linije.set(i, napraviCsvLinijuSaId(korisnik, korisnik.getId()));
+                    break;
+                }
+            }
+
+            linije.removeIf(String::isBlank);
+            Files.write(Path.of(putanjaDoFajla), linije);
+        } catch (IOException e) {
+            System.out.println("Greska prilikom azuriranja korisnika u fajlu: " + putanjaDoFajla);
+        }
+    }
+
+    public void obrisi(int id) {
+        try {
+            ArrayList<String> linije = new ArrayList<>(Files.readAllLines(Path.of(putanjaDoFajla)));
+            for (int i = linije.size() - 1; i >= 1; i--) {
+                if (linije.get(i).isBlank()) {
+                    linije.remove(i);
+                    continue;
+                }
+
+                String[] delovi = linije.get(i).split(",", -1);
+                if (Integer.parseInt(delovi[0]) == id) {
+                    linije.remove(i);
+                    break;
+                }
+            }
+
+            Files.write(Path.of(putanjaDoFajla), linije);
+        } catch (IOException e) {
+            System.out.println("Greska prilikom brisanja korisnika iz fajla: " + putanjaDoFajla);
         }
     }
 
@@ -161,8 +216,11 @@ public class KorisnikRepozitorijum {
     }
 
     private String napraviCsvLiniju(Korisnik korisnik) {
-        int id = sledeciId();
+        int id = korisnik.getId() > 0 ? korisnik.getId() : sledeciId();
+        return napraviCsvLinijuSaId(korisnik, id);
+    }
 
+    private String napraviCsvLinijuSaId(Korisnik korisnik, int id) {
         if (korisnik instanceof Klijent) {
             Klijent klijent = (Klijent) korisnik;
             return id + "," + TipKorisnika.KLIJENT + "," + osnovnaPolja(korisnik) + ","

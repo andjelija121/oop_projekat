@@ -118,6 +118,7 @@ public class IzdavanjeMenadzer {
         rezervacija.setKazna(kazna);
         rezervacija.setCenaUkupno(rezervacija.getCenaNajma()
                 + rezervacija.getCenaDodatnihUsluga() + kazna);
+        rezervacija.setStatus(StatusRezervacije.ZAVRSENA);
         rezervacijaRepozitorijum.azuriraj(rezervacija);
         return true;
     }
