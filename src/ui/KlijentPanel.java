@@ -1,6 +1,7 @@
 package ui;
 
 import enums.TipNaplate;
+import enums.KategorijaVozila;
 import menadzment.CenovnikMenadzer;
 import menadzment.PretplataMenadzer;
 import menadzment.RezervacijaMenadzer;
@@ -79,10 +80,23 @@ public class KlijentPanel extends JPanel {
     private JPanel novaRezervacijaPanel() {
         JPanel panel = UiKomponente.kartica(new BorderLayout(0, 14));
         panel.add(UiKomponente.naslovSekcije("Nova rezervacija"), BorderLayout.NORTH);
+        JPanel sadrzaj = new JPanel(new BorderLayout(0, 14));
+        sadrzaj.setBackground(UiKomponente.PANEL);
+
+        JPanel filterPanel = UiKomponente.kartica(new BorderLayout(0, 10));
+        JPanel filterForma = new JPanel(new GridBagLayout());
+        filterForma.setBackground(UiKomponente.PANEL);
+
         JPanel forma = new JPanel(new GridBagLayout());
         forma.setBackground(UiKomponente.PANEL);
         JComboBox<ModelVozila> modelBox = new JComboBox<>();
-        for (ModelVozila model : rezervacijaMenadzer.ucitajModeleVozila()) modelBox.addItem(model);
+        JTextField nazivModela = new JTextField();
+        JTextField proizvodjac = new JTextField();
+        JComboBox<String> kategorijaBox = new JComboBox<>();
+        kategorijaBox.addItem("Sve kategorije");
+        for (KategorijaVozila kategorijaVozila : KategorijaVozila.values()) {
+            kategorijaBox.addItem(kategorijaVozila.name());
+        }
         JTextField datumOd = new JTextField(LocalDate.now().plusDays(1).toString());
         JTextField datumDo = new JTextField(izracunajDatumDo(
                 LocalDate.now().plusDays(1), 0).toString());
@@ -106,19 +120,33 @@ public class KlijentPanel extends JPanel {
         JLabel dostupnost = new JLabel(" ");
         JLabel cenaLabela = new JLabel(" ");
         JButton proveri = new JButton("Proveri dostupnost");
+        JButton filtriraj = new JButton("Filtriraj");
         JButton izracunajCenu = UiKomponente.primarnoDugme("Izracunaj cenu");
         JButton rezervisi = UiKomponente.primarnoDugme("Napravi zahtev");
 
         int red = 0;
-        red = UiKomponente.dodajPolje(forma, red, "Model vozila", modelBox);
-        red = UiKomponente.dodajPolje(forma, red, "Datum od", datumOd);
-        red = UiKomponente.dodajPolje(forma, red, "Datum do", datumDo);
-        red = UiKomponente.dodajPolje(forma, red, "Dodatne usluge", uslugePanel);
+        red = UiKomponente.dodajPolje(filterForma, red, "Naziv modela", nazivModela);
+        red = UiKomponente.dodajPolje(filterForma, red, "Proizvodjac", proizvodjac);
+        red = UiKomponente.dodajPolje(filterForma, red, "Kategorija", kategorijaBox);
+        red = UiKomponente.dodajPolje(filterForma, red, "Datum od", datumOd);
+        red = UiKomponente.dodajPolje(filterForma, red, "Datum do", datumDo);
+        red = UiKomponente.dodajPolje(filterForma, red, "Dodatni dani", dodatniDani);
+        UiKomponente.dodajPolje(filterForma, red, "Dostupnost", dostupnost);
+
+        int redRezervacije = 0;
+        redRezervacije = UiKomponente.dodajPolje(forma, redRezervacije, "Model vozila", modelBox);
+        redRezervacije = UiKomponente.dodajPolje(forma, redRezervacije, "Dodatne usluge", uslugePanel);
         uslugePanel.setPreferredSize(new Dimension(220, 75));
         uslugePanel.setMinimumSize(new Dimension(220, 75));
-        red = UiKomponente.dodajPolje(forma, red, "Dodatni dani", dodatniDani);
-        red = UiKomponente.dodajPolje(forma, red, "Dostupnost", dostupnost);
-        UiKomponente.dodajPolje(forma, red, "Cena", cenaLabela);
+        UiKomponente.dodajPolje(forma, redRezervacije, "Cena", cenaLabela);
+
+        osveziModeleZaFilter(modelBox, nazivModela.getText(), proizvodjac.getText(), kategorijaBox, datumOd, datumDo,
+                dodatniDani, cenaLabela, dostupnost);
+
+        filtriraj.addActionListener(e -> {
+            osveziModeleZaFilter(modelBox, nazivModela.getText(), proizvodjac.getText(), kategorijaBox, datumOd,
+                    datumDo, dodatniDani, cenaLabela, dostupnost);
+        });
 
         proveri.addActionListener(e -> {
             try {
@@ -131,6 +159,12 @@ public class KlijentPanel extends JPanel {
 
                 LocalDate izabraniDatumDo = izracunajDatumDo(izabraniDatumOd, brojDodatnihDana);
                 datumDo.setText(izabraniDatumDo.toString());
+                osveziModeleZaFilter(modelBox, nazivModela.getText(), proizvodjac.getText(), kategorijaBox,
+                        datumOd, datumDo, dodatniDani, cenaLabela, dostupnost);
+                if (modelBox.getSelectedItem() == null) {
+                    JOptionPane.showMessageDialog(this, "Izaberite model vozila iz liste.");
+                    return;
+                }
                 boolean dostupno = rezervacijaMenadzer.daLiJeModelDostupan(
                         (ModelVozila) modelBox.getSelectedItem(), izabraniDatumOd, izabraniDatumDo);
                 dostupnost.setText(dostupno ? "Dostupno" : "Nije dostupno");
@@ -218,10 +252,25 @@ public class KlijentPanel extends JPanel {
 
         JPanel dugmad = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         dugmad.setBackground(UiKomponente.PANEL);
-        dugmad.add(proveri);
         dugmad.add(izracunajCenu);
         dugmad.add(rezervisi);
-        panel.add(forma, BorderLayout.CENTER);
+        JPanel filterDugmad = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        filterDugmad.setBackground(UiKomponente.PANEL);
+        filterDugmad.add(filtriraj);
+        filterDugmad.add(proveri);
+
+        filterPanel.add(UiKomponente.naslovSekcije("Pretraga dostupnih vozila"), BorderLayout.NORTH);
+        filterPanel.add(filterForma, BorderLayout.CENTER);
+        filterPanel.add(filterDugmad, BorderLayout.SOUTH);
+
+        JPanel rezervacijaPanel = UiKomponente.kartica(new BorderLayout(0, 10));
+        rezervacijaPanel.add(UiKomponente.naslovSekcije("Detalji rezervacije"), BorderLayout.NORTH);
+        rezervacijaPanel.add(forma, BorderLayout.CENTER);
+
+        sadrzaj.add(filterPanel, BorderLayout.NORTH);
+        sadrzaj.add(rezervacijaPanel, BorderLayout.CENTER);
+
+        panel.add(sadrzaj, BorderLayout.CENTER);
         panel.add(dugmad, BorderLayout.SOUTH);
         return panel;
     }
@@ -324,6 +373,40 @@ public class KlijentPanel extends JPanel {
                                        ArrayList<DodatnaUsluga> dodatneUsluge, int brojDodatnihDana) {
         return cenovnikMenadzer.izracunajUkupnuCenuRezervacije(klijent, modelVozila, datumOd, datumDo,
                 dodatneUsluge, brojDodatnihDana);
+    }
+
+    private void osveziModeleZaFilter(JComboBox<ModelVozila> modelBox, String nazivModela, String proizvodjac,
+                                      JComboBox<String> kategorijaBox, JTextField datumOd, JTextField datumDo,
+                                      JTextField dodatniDani, JLabel cenaLabela, JLabel dostupnost) {
+        try {
+            LocalDate izabraniDatumOd = LocalDate.parse(datumOd.getText().trim());
+            int brojDodatnihDana = Integer.parseInt(dodatniDani.getText().trim());
+            LocalDate izabraniDatumDo = izracunajDatumDo(izabraniDatumOd, brojDodatnihDana);
+            datumDo.setText(izabraniDatumDo.toString());
+
+            KategorijaVozila kategorija = kategorijaBox.getSelectedIndex() <= 0 ? null
+                    : KategorijaVozila.valueOf((String) kategorijaBox.getSelectedItem());
+            ArrayList<ModelVozila> modeli = rezervacijaMenadzer.filtrirajModele(
+                    nazivModela, proizvodjac, kategorija);
+
+            modelBox.removeAllItems();
+            for (ModelVozila model : modeli) {
+                modelBox.addItem(model);
+            }
+
+            cenaLabela.setText(" ");
+            if (modeli.isEmpty()) {
+                dostupnost.setText("Nema modela za zadate kriterijume");
+                dostupnost.setForeground(new Color(180, 45, 45));
+            } else {
+                dostupnost.setText("Pronadjeno modela: " + modeli.size() + ". Proverite dostupnost za izabrani model.");
+                dostupnost.setForeground(new Color(35, 120, 70));
+            }
+        } catch (DateTimeParseException | NumberFormatException ex) {
+            modelBox.removeAllItems();
+            cenaLabela.setText(" ");
+            dostupnost.setText(" ");
+        }
     }
 
     private LocalDate izracunajDatumDo(LocalDate datumOd, int brojDodatnihDana) {

@@ -17,6 +17,7 @@ import repozitorijum.VoziloRepozitorijum;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import enums.KategorijaVozila;
 
 public class RezervacijaMenadzer {
     private RezervacijaRepozitorijum rezervacijaRepozitorijum;
@@ -314,6 +315,45 @@ public class RezervacijaMenadzer {
 
     public ArrayList<ModelVozila> ucitajModeleVozila() {
         return modelVozilaRepozitorijum.ucitajSve();
+    }
+
+    public ArrayList<ModelVozila> filtrirajModele(String nazivModela, String proizvodjac,
+                                                  KategorijaVozila kategorijaVozila) {
+        ArrayList<ModelVozila> rezultat = new ArrayList<>();
+
+        for (ModelVozila modelVozila : modelVozilaRepozitorijum.ucitajSve()) {
+            if (!poklapaNaziv(modelVozila, nazivModela)) {
+                continue;
+            }
+
+            if (!poklapaProizvodjaca(modelVozila, proizvodjac)) {
+                continue;
+            }
+
+            if (kategorijaVozila != null && modelVozila.getKategorijaVozila() != kategorijaVozila) {
+                continue;
+            }
+
+            rezultat.add(modelVozila);
+        }
+
+        return rezultat;
+    }
+
+    private boolean poklapaNaziv(ModelVozila modelVozila, String nazivModela) {
+        if (nazivModela == null || nazivModela.isBlank()) {
+            return true;
+        }
+
+        return modelVozila.getNaziv().toLowerCase().contains(nazivModela.trim().toLowerCase());
+    }
+
+    private boolean poklapaProizvodjaca(ModelVozila modelVozila, String proizvodjac) {
+        if (proizvodjac == null || proizvodjac.isBlank()) {
+            return true;
+        }
+
+        return modelVozila.getProizvodjac().toLowerCase().contains(proizvodjac.trim().toLowerCase());
     }
 
     public ArrayList<Rezervacija> ucitajSveRezervacije() {
