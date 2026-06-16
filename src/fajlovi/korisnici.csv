@@ -1,16 +1,16 @@
-id,tip,ime,prezime,pol,datumRodjenja,telefon,adresa,korisnickoIme,lozinka,datumDozvole,kategorijaKlijenta,nivoSpreme,godineStaza,osnova,koeficijent
-1,ADMINISTRATOR,Ana,Anic,ZENSKI,1990-05-12,060111222,Novi Sad,ana,123,,,VII,8,80000,1.6
-2,AGENT,Marko,Markovic,MUSKI,1988-03-10,060333444,Beograd,marko,123,,,VI,6,70000,1.4
-3,AGENT,Jovana,Jovic,ZENSKI,1995-09-21,060777888,Novi Sad,jovana,123,,,VI,3,70000,1.4
-4,KLIJENT,Petar,Petrovic,MUSKI,2000-01-20,060555666,Nis,petar@gmail.com,123,2020-06-01,STUDENT,,,,
-5,KLIJENT,Milica,Milic,ZENSKI,1998-11-04,060999000,Subotica,milica@gmail.com,123,2018-03-15,FIRMA,,,,
-6,KLIJENT,Lazar,Lazic,MUSKI,2003-07-18,061123456,Beograd,lazar@gmail.com,123,2023-12-10,BEZ_KATEGORIJE,,,,
-7,KLIJENT,Nina,Nikolic,ZENSKI,1970-02-02,061222333,Zrenjanin,nina@gmail.com,123,2015-04-20,PENZIONER,,,,
-8,KLIJENT,Ivan,Ivic,MUSKI,1999-08-08,061333444,Kragujevac,ivan@gmail.com,123,2020-01-01,STUDENT,,,,
-9,KLIJENT,Sara,Saric,ZENSKI,2004-09-09,061444555,Uzice,sara@gmail.com,123,2025-09-01,BEZ_KATEGORIJE,,,,
-10,ADMINISTRATOR,Marija,Mikic,ZENSKI,1987-10-10,0648443497,Novi Sad,marija,123,,,VI,4,65000,1.4
-11,AGENT,Sava,Savic,MUSKI,1992-12-12,064555666,Novi Sad,sava,123,,,IV,2,60000,1.0
-12,KLIJENT,Nikola,Nikolic,MUSKI,1994-04-14,061555666,Pancevo,nikola@gmail.com,123,2017-05-05,FIRMA,,,,
-13,KLIJENT,Maja,Maric,ZENSKI,1996-06-16,061666777,Sombor,maja@gmail.com,123,2019-07-07,BEZ_KATEGORIJE,,,,
-14,KLIJENT,Ognjen,Ognjanovic,MUSKI,2001-03-03,061777888,Valjevo,ognjen@gmail.com,123,2022-08-08,STUDENT,,,,
-15,KLIJENT,Teodora,Todic,ZENSKI,1997-11-11,061888999,Novi Sad,teodora@gmail.com,123,2016-06-06,BEZ_KATEGORIJE,,,,
+﻿id,tip,ime,prezime,pol,datumRodjenja,telefon,adresa,korisnickoIme,lozinka,datumDozvole,kategorijaKlijenta,nivoSpreme,godineStaza,osnova,koeficijent
+1,ADMINISTRATOR,Ana,Anic,ZENSKI,1990-05-12,060111222,Novi Sad,ana,sifra,,,VII,8,80000,1.6
+2,AGENT,Marko,Markovic,MUSKI,1988-03-10,060333444,Beograd,marko,sifra,,,VI,6,70000,1.4
+3,AGENT,Jovana,Jovic,ZENSKI,1995-09-21,060777888,Novi Sad,jovana,sifra,,,VI,3,70000,1.4
+4,KLIJENT,Petar,Petrovic,MUSKI,2000-01-20,060555666,Nis,petar@gmail.com,sifra,2020-06-01,STUDENT,,,,
+5,KLIJENT,Milica,Milic,ZENSKI,1998-11-04,060999000,Subotica,milica@gmail.com,sifra,2018-03-15,FIRMA,,,,
+6,KLIJENT,Lazar,Lazic,MUSKI,2003-07-18,061123456,Beograd,lazar@gmail.com,sifra,2023-12-10,BEZ_KATEGORIJE,,,,
+7,KLIJENT,Nina,Nikolic,ZENSKI,1970-02-02,061222333,Zrenjanin,nina@gmail.com,sifra,2015-04-20,PENZIONER,,,,
+8,KLIJENT,Ivan,Ivic,MUSKI,1999-08-08,061333444,Kragujevac,ivan@gmail.com,sifra,2020-01-01,STUDENT,,,,
+9,KLIJENT,Sara,Saric,ZENSKI,2004-09-09,061444555,Uzice,sara@gmail.com,sifra,2025-09-01,BEZ_KATEGORIJE,,,,
+10,ADMINISTRATOR,Marija,Mikic,ZENSKI,1987-10-10,0648443497,Novi Sad,marija,sifra,,,VI,4,65000,1.4
+11,AGENT,Sava,Savic,MUSKI,1992-12-12,064555666,Novi Sad,sava,sifra,,,IV,2,60000,1.0
+12,KLIJENT,Nikola,Nikolic,MUSKI,1994-04-14,061555666,Pancevo,nikola@gmail.com,sifra,2017-05-05,FIRMA,,,,
+13,KLIJENT,Maja,Maric,ZENSKI,1996-06-16,061666777,Sombor,maja@gmail.com,sifra,2019-07-07,BEZ_KATEGORIJE,,,,
+14,KLIJENT,Ognjen,Ognjanovic,MUSKI,2001-03-03,061777888,Valjevo,ognjen@gmail.com,sifra,2022-08-08,STUDENT,,,,
+15,KLIJENT,Teodora,Todic,ZENSKI,1997-11-11,061888999,Novi Sad,teodora@gmail.com,sifra,2016-06-06,BEZ_KATEGORIJE,,,,
