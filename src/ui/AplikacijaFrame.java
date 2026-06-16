@@ -52,6 +52,7 @@ public class AplikacijaFrame extends JFrame {
         cenovnikMenadzer = new CenovnikMenadzer(new CenovnikRepozitorijum());
         IzdavanjeRepozitorijum izdavanja = new IzdavanjeRepozitorijum(
                 "src/fajlovi/izdavanja.csv", rezervacije, korisnikRepozitorijum, vozila);
+        rezervacijaMenadzer.setIzdavanjeRepozitorijum(izdavanja);
         izdavanjeMenadzer = new IzdavanjeMenadzer(izdavanja, rezervacije, vozila, cenovnikMenadzer);
         dodatnaUslugaRepozitorijum = new DodatnaUslugaRepozitorijum();
         rezervacijaMenadzer.odbijIstekleRezervacije();

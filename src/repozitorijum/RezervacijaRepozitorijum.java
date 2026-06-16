@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class RezervacijaRepozitorijum {
@@ -126,15 +127,19 @@ public class RezervacijaRepozitorijum {
                 Double.parseDouble(delovi[6]),
                 Double.parseDouble(delovi[7]),
                 Double.parseDouble(delovi[8]),
-                Double.parseDouble(delovi[9])
+                Double.parseDouble(delovi[9]),
+                delovi.length > 10 && !delovi[10].isBlank() ? LocalDateTime.parse(delovi[10]) : null
         );
     }
 
     private String napraviCsvLiniju(Rezervacija rezervacija) {
+        String vremeOtkazivanja = rezervacija.getVremeOtkazivanja() == null
+                ? "" : rezervacija.getVremeOtkazivanja().toString();
+
         return rezervacija.getId() + "," + rezervacija.getKlijent().getId() + ","
                 + rezervacija.getModelVozila().getId() + ","
                 + rezervacija.getDatumOd() + "," + rezervacija.getDatumDo() + "," + rezervacija.getStatus() + ","
                 + rezervacija.getCenaNajma() + "," + rezervacija.getCenaDodatnihUsluga() + ","
-                + rezervacija.getKazna() + "," + rezervacija.getCenaUkupno();
+                + rezervacija.getKazna() + "," + rezervacija.getCenaUkupno() + "," + vremeOtkazivanja;
     }
 }

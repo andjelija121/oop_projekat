@@ -170,6 +170,13 @@ public class KlijentPanel extends JPanel {
                 datumDo.setText(izabraniDatumDo.toString());
                 ModelVozila izabraniModel = (ModelVozila) modelBox.getSelectedItem();
                 ArrayList<DodatnaUsluga> izabraneUsluge = izabraneDodatneUsluge(uslugaCheckBoxovi);
+
+                if (rezervacijaMenadzer.klijentImaZabranuRezervisanja(klijent)) {
+                    JOptionPane.showMessageDialog(this,
+                            "Ne mozete napraviti novu rezervaciju 24h nakon otkazivanja.");
+                    return;
+                }
+
                 double cenaNajma = cenovnikMenadzer.izracunajCenuNajma(klijent, izabraniModel,
                         izabraniDatumOd, izabraniDatumDo, brojDodatnihDana);
                 double cenaDodatnihUsluga = cenovnikMenadzer.izracunajCenuDodatnihUsluga(

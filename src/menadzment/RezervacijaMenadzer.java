@@ -9,11 +9,13 @@ import model.ModelVozila;
 import model.Rezervacija;
 import model.RezervacijaUsluga;
 import repozitorijum.ModelVozilaRepozitorijum;
+import repozitorijum.IzdavanjeRepozitorijum;
 import repozitorijum.RezervacijaRepozitorijum;
 import repozitorijum.RezervacijaUslugaRepozitorijum;
 import repozitorijum.VoziloRepozitorijum;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class RezervacijaMenadzer {
@@ -21,6 +23,7 @@ public class RezervacijaMenadzer {
     private VoziloRepozitorijum voziloRepozitorijum;
     private ModelVozilaRepozitorijum modelVozilaRepozitorijum;
     private RezervacijaUslugaRepozitorijum rezervacijaUslugaRepozitorijum;
+    private IzdavanjeRepozitorijum izdavanjeRepozitorijum;
 
     public RezervacijaMenadzer(RezervacijaRepozitorijum rezervacijaRepozitorijum,
                               VoziloRepozitorijum voziloRepozitorijum,
@@ -37,6 +40,10 @@ public class RezervacijaMenadzer {
         this.voziloRepozitorijum = voziloRepozitorijum;
         this.modelVozilaRepozitorijum = modelVozilaRepozitorijum;
         this.rezervacijaUslugaRepozitorijum = rezervacijaUslugaRepozitorijum;
+    }
+
+    public void setIzdavanjeRepozitorijum(IzdavanjeRepozitorijum izdavanjeRepozitorijum) {
+        this.izdavanjeRepozitorijum = izdavanjeRepozitorijum;
     }
 
     public boolean daLiJeModelDostupan(ModelVozila modelVozila, LocalDate datumOd, LocalDate datumDo) {
@@ -96,6 +103,10 @@ public class RezervacijaMenadzer {
         }
 
         if (!klijent.vazecaDozvola()) {
+            return null;
+        }
+
+        if (klijentImaZabranuRezervisanja(klijent)) {
             return null;
         }
 
@@ -228,6 +239,7 @@ public class RezervacijaMenadzer {
         }
 
         rezervacija.setStatus(StatusRezervacije.OTKAZANA);
+        rezervacija.setVremeOtkazivanja(LocalDateTime.now());
         rezervacijaRepozitorijum.azuriraj(rezervacija);
         return true;
     }
@@ -243,7 +255,39 @@ public class RezervacijaMenadzer {
                 rezervacija.setStatus(StatusRezervacije.ODBIJENA);
                 rezervacijaRepozitorijum.azuriraj(rezervacija);
             }
+
+            boolean potvrdjena = rezervacija.getStatus() == StatusRezervacije.POTVRDJENA;
+            boolean datumPocetkaProsao = rezervacija.getDatumOd().isBefore(danas);
+            boolean nijePreuzeta = izdavanjeRepozitorijum != null
+                    && izdavanjeRepozitorijum.pronadjiPoRezervaciji(rezervacija.getId()) == null;
+
+            if (potvrdjena && datumPocetkaProsao && nijePreuzeta) {
+                rezervacija.setStatus(StatusRezervacije.OTKAZANA);
+                rezervacija.setVremeOtkazivanja(LocalDateTime.now());
+                rezervacijaRepozitorijum.azuriraj(rezervacija);
+            }
         }
+    }
+
+    public boolean klijentImaZabranuRezervisanja(Klijent klijent) {
+        if (klijent == null) {
+            return false;
+        }
+
+        LocalDateTime sada = LocalDateTime.now();
+        for (Rezervacija rezervacija : rezervacijaRepozitorijum.ucitajSve()) {
+            if (!rezervacija.pripadaKlijentu(klijent)
+                    || rezervacija.getStatus() != StatusRezervacije.OTKAZANA
+                    || rezervacija.getVremeOtkazivanja() == null) {
+                continue;
+            }
+
+            if (rezervacija.getVremeOtkazivanja().plusHours(24).isAfter(sada)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean validanPeriodZaNoviZahtev(LocalDate datumOd, LocalDate datumDo) {

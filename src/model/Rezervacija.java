@@ -3,6 +3,7 @@ package model;
 import enums.StatusRezervacije;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Rezervacija {
     private int id;
@@ -15,10 +16,18 @@ public class Rezervacija {
     private double cenaDodatnihUsluga;
     private double kazna;
     private double cenaUkupno;
+    private LocalDateTime vremeOtkazivanja;
 
     public Rezervacija(int id, Klijent klijent, ModelVozila modelVozila, LocalDate datumOd, LocalDate datumDo,
                        StatusRezervacije status, double cenaNajma, double cenaDodatnihUsluga,
                        double kazna, double cenaUkupno) {
+        this(id, klijent, modelVozila, datumOd, datumDo, status, cenaNajma, cenaDodatnihUsluga,
+                kazna, cenaUkupno, null);
+    }
+
+    public Rezervacija(int id, Klijent klijent, ModelVozila modelVozila, LocalDate datumOd, LocalDate datumDo,
+                       StatusRezervacije status, double cenaNajma, double cenaDodatnihUsluga,
+                       double kazna, double cenaUkupno, LocalDateTime vremeOtkazivanja) {
         this.id = id;
         this.klijent = klijent;
         this.modelVozila = modelVozila;
@@ -29,6 +38,7 @@ public class Rezervacija {
         this.cenaDodatnihUsluga = cenaDodatnihUsluga;
         this.kazna = kazna;
         this.cenaUkupno = cenaUkupno;
+        this.vremeOtkazivanja = vremeOtkazivanja;
     }
 
     public int getId() {
@@ -85,6 +95,14 @@ public class Rezervacija {
 
     public void setCenaUkupno(double cenaUkupno) {
         this.cenaUkupno = cenaUkupno;
+    }
+
+    public LocalDateTime getVremeOtkazivanja() {
+        return vremeOtkazivanja;
+    }
+
+    public void setVremeOtkazivanja(LocalDateTime vremeOtkazivanja) {
+        this.vremeOtkazivanja = vremeOtkazivanja;
     }
 
     public boolean jeNaCekanju() {
