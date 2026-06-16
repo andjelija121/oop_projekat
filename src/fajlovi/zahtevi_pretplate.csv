@@ -1,3 +1,4 @@
 id,klijentId,agentId,datumZahteva,status
-1,6,2,2026-06-01,NA_CEKANJU
+1,6,2,2026-06-01,ODOBREN
 2,4,3,2026-05-15,ODOBREN
+3,10,2,2026-06-16,ODOBREN

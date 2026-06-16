@@ -199,4 +199,23 @@ public class CenovnikMenadzer {
 
         return 0;
     }
+
+    public double pronadjiCenuGodisnjePretplate(LocalDate datum) {
+        if (datum == null) {
+            return 0;
+        }
+
+        Cenovnik cenovnik = cenovnikRepozitorijum.pronadjiVazeciCenovnik(datum);
+        if (cenovnik == null) {
+            return 0;
+        }
+
+        for (StavkaCenovnika stavka : cenovnik.getStavke()) {
+            if (stavka.getTipCene() == TipCene.GODISNJA_PRETPLATA) {
+                return stavka.getVrednost();
+            }
+        }
+
+        return 0;
+    }
 }

@@ -6,14 +6,17 @@ import enums.TipNaplate;
 import menadzment.CenovnikMenadzer;
 import menadzment.IzdavanjeMenadzer;
 import menadzment.KlijentMenadzer;
+import menadzment.PretplataMenadzer;
 import menadzment.RezervacijaMenadzer;
 import model.DodatnaUsluga;
 import model.Izdavanje;
 import model.Klijent;
 import model.Korisnik;
+import model.Pretplata;
 import model.Rezervacija;
 import model.RezervacijaUsluga;
 import model.Vozilo;
+import model.ZahtevPretplate;
 import repozitorijum.DodatnaUslugaRepozitorijum;
 import repozitorijum.KorisnikRepozitorijum;
 
@@ -40,12 +43,14 @@ public class AgentPanel extends JPanel {
     private final KlijentMenadzer klijentMenadzer;
     private final RezervacijaMenadzer rezervacijaMenadzer;
     private final IzdavanjeMenadzer izdavanjeMenadzer;
+    private final PretplataMenadzer pretplataMenadzer;
     private final CenovnikMenadzer cenovnikMenadzer;
     private final DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum;
     private final Runnable osvezi;
 
     public AgentPanel(Korisnik agent, KorisnikRepozitorijum korisnici, KlijentMenadzer klijentMenadzer,
                       RezervacijaMenadzer rezervacijaMenadzer, IzdavanjeMenadzer izdavanjeMenadzer,
+                      PretplataMenadzer pretplataMenadzer,
                       CenovnikMenadzer cenovnikMenadzer, DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum,
                       Runnable osvezi, Runnable odjava) {
         super(new BorderLayout());
@@ -54,6 +59,7 @@ public class AgentPanel extends JPanel {
         this.klijentMenadzer = klijentMenadzer;
         this.rezervacijaMenadzer = rezervacijaMenadzer;
         this.izdavanjeMenadzer = izdavanjeMenadzer;
+        this.pretplataMenadzer = pretplataMenadzer;
         this.cenovnikMenadzer = cenovnikMenadzer;
         this.dodatnaUslugaRepozitorijum = dodatnaUslugaRepozitorijum;
         this.osvezi = osvezi;
@@ -63,6 +69,7 @@ public class AgentPanel extends JPanel {
         tabs.addTab("Izdavanja", izdavanjaPanel());
         tabs.addTab("Vozila", vozilaPanel());
         tabs.addTab("Klijenti", klijentiPanel());
+        tabs.addTab("Pretplate", pretplatePanel());
         tabs.addTab("Dodaj klijenta", dodajKlijentaPanel());
         add(UiKomponente.okvirAplikacije(tabs, "Agent", agent, odjava));
     }
@@ -351,6 +358,53 @@ public class AgentPanel extends JPanel {
         }
         panel.add(new JScrollPane(UiKomponente.tabela(model)), BorderLayout.CENTER);
         return panel;
+    }
+
+    private JPanel pretplatePanel() {
+        JPanel panel = UiKomponente.kartica(new BorderLayout(0, 12));
+        panel.add(UiKomponente.naslovSekcije("Zahtevi za pretplatu"), BorderLayout.NORTH);
+        DefaultTableModel model = UiKomponente.modelTabele(
+                new String[]{"ID", "Klijent", "Agent", "Datum zahteva", "Status"});
+
+        for (ZahtevPretplate zahtev : pretplataMenadzer.ucitajSveZahteve()) {
+            String klijent = zahtev.getKlijent() == null ? "" :
+                    zahtev.getKlijent().getIme() + " " + zahtev.getKlijent().getPrezime();
+            String agentZahteva = zahtev.getAgent() == null ? "" :
+                    zahtev.getAgent().getIme() + " " + zahtev.getAgent().getPrezime();
+            model.addRow(new Object[]{zahtev.getId(), klijent, agentZahteva,
+                    zahtev.getDatumZahteva(), zahtev.getStatus()});
+        }
+
+        JTable tabela = UiKomponente.tabela(model);
+        JButton odobri = UiKomponente.primarnoDugme("Odobri");
+        JButton odbij = new JButton("Odbij");
+        odobri.addActionListener(e -> obradiZahtevPretplate(tabela, model, true));
+        odbij.addActionListener(e -> obradiZahtevPretplate(tabela, model, false));
+
+        JPanel dugmad = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        dugmad.setBackground(UiKomponente.PANEL);
+        dugmad.add(odbij);
+        dugmad.add(odobri);
+        panel.add(new JScrollPane(tabela), BorderLayout.CENTER);
+        panel.add(dugmad, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private void obradiZahtevPretplate(JTable tabela, DefaultTableModel model, boolean odobravanje) {
+        int red = tabela.getSelectedRow();
+        if (red == -1) {
+            JOptionPane.showMessageDialog(this, "Izaberite zahtev u tabeli.");
+            return;
+        }
+
+        int id = (int) model.getValueAt(red, 0);
+        boolean uspesno = odobravanje ? pretplataMenadzer.odobriZahtev(agent, id)
+                : pretplataMenadzer.odbijZahtev(agent, id);
+        String poruka = uspesno ? (odobravanje ? "Pretplata je odobrena." : "Zahtev je odbijen.")
+                : (odobravanje ? "Zahtev nije odobren. Proverite status i broj kasnjenja."
+                : "Zahtev nije odbijen. Proverite status.");
+        JOptionPane.showMessageDialog(this, poruka);
+        if (uspesno) osvezi.run();
     }
 
     private JPanel dodajKlijentaPanel() {

@@ -2,12 +2,15 @@ package ui;
 
 import enums.TipNaplate;
 import menadzment.CenovnikMenadzer;
+import menadzment.PretplataMenadzer;
 import menadzment.RezervacijaMenadzer;
 import model.DodatnaUsluga;
 import model.Klijent;
 import model.ModelVozila;
+import model.Pretplata;
 import model.Rezervacija;
 import model.RezervacijaUsluga;
+import model.ZahtevPretplate;
 import repozitorijum.DodatnaUslugaRepozitorijum;
 
 import javax.swing.JButton;
@@ -37,23 +40,27 @@ import java.util.ArrayList;
 public class KlijentPanel extends JPanel {
     private final Klijent klijent;
     private final RezervacijaMenadzer rezervacijaMenadzer;
+    private final PretplataMenadzer pretplataMenadzer;
     private final CenovnikMenadzer cenovnikMenadzer;
     private final DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum;
     private final Runnable osvezi;
 
     public KlijentPanel(Klijent klijent, RezervacijaMenadzer rezervacijaMenadzer,
+                        PretplataMenadzer pretplataMenadzer,
                         CenovnikMenadzer cenovnikMenadzer,
                         DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum,
                         Runnable osvezi, Runnable odjava) {
         super(new BorderLayout());
         this.klijent = klijent;
         this.rezervacijaMenadzer = rezervacijaMenadzer;
+        this.pretplataMenadzer = pretplataMenadzer;
         this.cenovnikMenadzer = cenovnikMenadzer;
         this.dodatnaUslugaRepozitorijum = dodatnaUslugaRepozitorijum;
         this.osvezi = osvezi;
 
         JTabbedPane tabs = UiKomponente.tabovi();
         tabs.addTab("Moji podaci", podaciPanel());
+        tabs.addTab("Pretplata", pretplataPanel());
         tabs.addTab("Nova rezervacija", novaRezervacijaPanel());
         tabs.addTab("Moje rezervacije", rezervacijePanel());
         add(UiKomponente.okvirAplikacije(tabs, "Klijent", klijent, odjava));
@@ -171,6 +178,12 @@ public class KlijentPanel extends JPanel {
                 ModelVozila izabraniModel = (ModelVozila) modelBox.getSelectedItem();
                 ArrayList<DodatnaUsluga> izabraneUsluge = izabraneDodatneUsluge(uslugaCheckBoxovi);
 
+                if (!pretplataMenadzer.imaAktivnuPretplatu(klijent)) {
+                    JOptionPane.showMessageDialog(this,
+                            "Ne mozete rezervisati vozilo bez aktivne pretplate.");
+                    return;
+                }
+
                 if (rezervacijaMenadzer.klijentImaZabranuRezervisanja(klijent)) {
                     JOptionPane.showMessageDialog(this,
                             "Ne mozete napraviti novu rezervaciju 24h nakon otkazivanja.");
@@ -209,6 +222,60 @@ public class KlijentPanel extends JPanel {
         dugmad.add(rezervisi);
         panel.add(forma, BorderLayout.CENTER);
         panel.add(dugmad, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private JPanel pretplataPanel() {
+        JPanel panel = UiKomponente.kartica(new BorderLayout(0, 12));
+        panel.add(UiKomponente.naslovSekcije("Pretplata"), BorderLayout.NORTH);
+
+        JPanel sadrzaj = new JPanel(new BorderLayout(0, 12));
+        sadrzaj.setBackground(UiKomponente.PANEL);
+
+        DefaultTableModel pretplataModel = UiKomponente.modelTabele(
+                new String[]{"Status", "Datum pocetka", "Datum kraja", "Cena"});
+        Pretplata pretplata = pretplataMenadzer.pronadjiPretplatuKlijenta(klijent);
+        if (pretplata != null) {
+            pretplataModel.addRow(new Object[]{pretplata.getStatus(), pretplata.getDatumPocetka(),
+                    pretplata.getDatumKraja(), pretplata.getCena()});
+        }
+
+        DefaultTableModel zahteviModel = UiKomponente.modelTabele(
+                new String[]{"ID", "Datum zahteva", "Status"});
+        for (ZahtevPretplate zahtev : pretplataMenadzer.ucitajZahteveKlijenta(klijent)) {
+            zahteviModel.addRow(new Object[]{zahtev.getId(), zahtev.getDatumZahteva(), zahtev.getStatus()});
+        }
+
+        JPanel tabele = new JPanel(new GridBagLayout());
+        tabele.setBackground(UiKomponente.PANEL);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(0, 0, 8, 0);
+        tabele.add(new JScrollPane(UiKomponente.tabela(pretplataModel)), gbc);
+        gbc.gridy = 1;
+        gbc.insets = new Insets(8, 0, 0, 0);
+        tabele.add(new JScrollPane(UiKomponente.tabela(zahteviModel)), gbc);
+
+        JButton zahtev = UiKomponente.primarnoDugme("Podnesi zahtev za obnovu");
+        zahtev.addActionListener(e -> {
+            ZahtevPretplate noviZahtev = pretplataMenadzer.napraviZahtev(klijent);
+            JOptionPane.showMessageDialog(this, noviZahtev != null
+                    ? "Zahtev za obnovu pretplate je poslat."
+                    : "Zahtev nije poslat. Proverite da li vec imate aktivnu pretplatu ili zahtev na cekanju.");
+            if (noviZahtev != null) osvezi.run();
+        });
+
+        JPanel dugmad = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        dugmad.setBackground(UiKomponente.PANEL);
+        dugmad.add(zahtev);
+
+        sadrzaj.add(tabele, BorderLayout.CENTER);
+        sadrzaj.add(dugmad, BorderLayout.SOUTH);
+        panel.add(sadrzaj, BorderLayout.CENTER);
         return panel;
     }
 

@@ -24,6 +24,7 @@ public class RezervacijaMenadzer {
     private ModelVozilaRepozitorijum modelVozilaRepozitorijum;
     private RezervacijaUslugaRepozitorijum rezervacijaUslugaRepozitorijum;
     private IzdavanjeRepozitorijum izdavanjeRepozitorijum;
+    private PretplataMenadzer pretplataMenadzer;
 
     public RezervacijaMenadzer(RezervacijaRepozitorijum rezervacijaRepozitorijum,
                               VoziloRepozitorijum voziloRepozitorijum,
@@ -44,6 +45,10 @@ public class RezervacijaMenadzer {
 
     public void setIzdavanjeRepozitorijum(IzdavanjeRepozitorijum izdavanjeRepozitorijum) {
         this.izdavanjeRepozitorijum = izdavanjeRepozitorijum;
+    }
+
+    public void setPretplataMenadzer(PretplataMenadzer pretplataMenadzer) {
+        this.pretplataMenadzer = pretplataMenadzer;
     }
 
     public boolean daLiJeModelDostupan(ModelVozila modelVozila, LocalDate datumOd, LocalDate datumDo) {
@@ -103,6 +108,10 @@ public class RezervacijaMenadzer {
         }
 
         if (!klijent.vazecaDozvola()) {
+            return null;
+        }
+
+        if (pretplataMenadzer != null && !pretplataMenadzer.imaAktivnuPretplatu(klijent)) {
             return null;
         }
 

@@ -2,6 +2,7 @@ package ui;
 
 import menadzment.IzdavanjeMenadzer;
 import menadzment.KlijentMenadzer;
+import menadzment.PretplataMenadzer;
 import menadzment.PrijavaMenadzer;
 import menadzment.RezervacijaMenadzer;
 import menadzment.ZaposleniMenadzer;
@@ -12,12 +13,14 @@ import model.Klijent;
 import model.Korisnik;
 import repozitorijum.KorisnikRepozitorijum;
 import repozitorijum.ModelVozilaRepozitorijum;
+import repozitorijum.PretplataRepozitorijum;
 import repozitorijum.RezervacijaRepozitorijum;
 import repozitorijum.VoziloRepozitorijum;
 import repozitorijum.CenovnikRepozitorijum;
 import repozitorijum.DodatnaUslugaRepozitorijum;
 import repozitorijum.IzdavanjeRepozitorijum;
 import repozitorijum.RezervacijaUslugaRepozitorijum;
+import repozitorijum.ZahtevPretplateRepozitorijum;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -32,6 +35,7 @@ public class AplikacijaFrame extends JFrame {
     private final KlijentMenadzer klijentMenadzer;
     private final RezervacijaMenadzer rezervacijaMenadzer;
     private final IzdavanjeMenadzer izdavanjeMenadzer;
+    private final PretplataMenadzer pretplataMenadzer;
     private final CenovnikMenadzer cenovnikMenadzer;
     private final DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum;
     private final RezervacijaUslugaRepozitorijum rezervacijaUslugaRepozitorijum;
@@ -54,6 +58,12 @@ public class AplikacijaFrame extends JFrame {
                 "src/fajlovi/izdavanja.csv", rezervacije, korisnikRepozitorijum, vozila);
         rezervacijaMenadzer.setIzdavanjeRepozitorijum(izdavanja);
         izdavanjeMenadzer = new IzdavanjeMenadzer(izdavanja, rezervacije, vozila, cenovnikMenadzer);
+        pretplataMenadzer = new PretplataMenadzer(
+                new PretplataRepozitorijum("src/fajlovi/pretplate.csv", korisnikRepozitorijum),
+                new ZahtevPretplateRepozitorijum("src/fajlovi/zahtevi_pretplate.csv", korisnikRepozitorijum),
+                izdavanja,
+                cenovnikMenadzer);
+        rezervacijaMenadzer.setPretplataMenadzer(pretplataMenadzer);
         dodatnaUslugaRepozitorijum = new DodatnaUslugaRepozitorijum();
         rezervacijaMenadzer.odbijIstekleRezervacije();
 
@@ -87,11 +97,12 @@ public class AplikacijaFrame extends JFrame {
         } else if (ulogovaniKorisnik instanceof Agent) {
             rezervacijaMenadzer.odbijIstekleRezervacije();
             setContentPane(new AgentPanel(ulogovaniKorisnik, korisnikRepozitorijum, klijentMenadzer,
-                    rezervacijaMenadzer, izdavanjeMenadzer, cenovnikMenadzer, dodatnaUslugaRepozitorijum,
+                    rezervacijaMenadzer, izdavanjeMenadzer, pretplataMenadzer,
+                    cenovnikMenadzer, dodatnaUslugaRepozitorijum,
                     this::prikaziGlavniEkran, this::prikaziLogin));
         } else if (ulogovaniKorisnik instanceof Klijent) {
             setContentPane(new KlijentPanel((Klijent) ulogovaniKorisnik, rezervacijaMenadzer,
-                    cenovnikMenadzer, dodatnaUslugaRepozitorijum,
+                    pretplataMenadzer, cenovnikMenadzer, dodatnaUslugaRepozitorijum,
                     this::prikaziGlavniEkran, this::prikaziLogin));
         }
         osveziProzor();
