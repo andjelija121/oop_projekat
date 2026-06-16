@@ -4,13 +4,16 @@ import enums.KategorijaKlijenta;
 import enums.Pol;
 import enums.TipNaplate;
 import menadzment.CenovnikMenadzer;
+import menadzment.IzdavanjeMenadzer;
 import menadzment.KlijentMenadzer;
 import menadzment.RezervacijaMenadzer;
 import model.DodatnaUsluga;
+import model.Izdavanje;
 import model.Klijent;
 import model.Korisnik;
 import model.Rezervacija;
 import model.RezervacijaUsluga;
+import model.Vozilo;
 import repozitorijum.DodatnaUslugaRepozitorijum;
 import repozitorijum.KorisnikRepozitorijum;
 
@@ -28,6 +31,7 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridBagLayout;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 
 public class AgentPanel extends JPanel {
@@ -35,25 +39,29 @@ public class AgentPanel extends JPanel {
     private final KorisnikRepozitorijum korisnici;
     private final KlijentMenadzer klijentMenadzer;
     private final RezervacijaMenadzer rezervacijaMenadzer;
+    private final IzdavanjeMenadzer izdavanjeMenadzer;
     private final CenovnikMenadzer cenovnikMenadzer;
     private final DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum;
     private final Runnable osvezi;
 
     public AgentPanel(Korisnik agent, KorisnikRepozitorijum korisnici, KlijentMenadzer klijentMenadzer,
-                      RezervacijaMenadzer rezervacijaMenadzer, CenovnikMenadzer cenovnikMenadzer,
-                      DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum,
+                      RezervacijaMenadzer rezervacijaMenadzer, IzdavanjeMenadzer izdavanjeMenadzer,
+                      CenovnikMenadzer cenovnikMenadzer, DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum,
                       Runnable osvezi, Runnable odjava) {
         super(new BorderLayout());
         this.agent = agent;
         this.korisnici = korisnici;
         this.klijentMenadzer = klijentMenadzer;
         this.rezervacijaMenadzer = rezervacijaMenadzer;
+        this.izdavanjeMenadzer = izdavanjeMenadzer;
         this.cenovnikMenadzer = cenovnikMenadzer;
         this.dodatnaUslugaRepozitorijum = dodatnaUslugaRepozitorijum;
         this.osvezi = osvezi;
 
         JTabbedPane tabs = UiKomponente.tabovi();
         tabs.addTab("Rezervacije", rezervacijePanel());
+        tabs.addTab("Izdavanja", izdavanjaPanel());
+        tabs.addTab("Vozila", vozilaPanel());
         tabs.addTab("Klijenti", klijentiPanel());
         tabs.addTab("Dodaj klijenta", dodajKlijentaPanel());
         add(UiKomponente.okvirAplikacije(tabs, "Agent", agent, odjava));
@@ -63,12 +71,14 @@ public class AgentPanel extends JPanel {
         JPanel panel = UiKomponente.kartica(new BorderLayout(0, 12));
         panel.add(UiKomponente.naslovSekcije("Rezervacije"), BorderLayout.NORTH);
         DefaultTableModel model = UiKomponente.modelTabele(
-                new String[]{"ID", "Klijent", "Model", "Datum od", "Datum do", "Status", "Dodatne usluge", "Ukupno"});
+                new String[]{"ID", "Klijent", "Model", "Datum od", "Datum do", "Status",
+                        "Izdavanje", "Dodatne usluge", "Ukupno"});
         for (Rezervacija rezervacija : rezervacijaMenadzer.ucitajSveRezervacije()) {
             model.addRow(new Object[]{rezervacija.getId(),
                     rezervacija.getKlijent().getIme() + " " + rezervacija.getKlijent().getPrezime(),
                     rezervacija.getModelVozila(), rezervacija.getDatumOd(), rezervacija.getDatumDo(),
-                    rezervacija.getStatus(), opisDodatnihUsluga(rezervacija.getId()),
+                    rezervacija.getStatus(), izdavanjeMenadzer.opisIzdavanjaRezervacije(rezervacija.getId()),
+                    opisDodatnihUsluga(rezervacija.getId()),
                     rezervacija.getCenaUkupno()});
         }
 
@@ -76,12 +86,15 @@ public class AgentPanel extends JPanel {
         JButton potvrdi = UiKomponente.primarnoDugme("Potvrdi");
         JButton odbij = new JButton("Odbij");
         JButton dodajUslugu = new JButton("Dodaj dodatnu uslugu");
+        JButton izdaj = new JButton("Izdaj vozilo");
         potvrdi.addActionListener(e -> obradiRezervaciju(tabela, model, true));
         odbij.addActionListener(e -> obradiRezervaciju(tabela, model, false));
         dodajUslugu.addActionListener(e -> dodajDodatnuUslugu(tabela, model));
+        izdaj.addActionListener(e -> izdajVozilo(tabela, model));
         JPanel dugmad = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         dugmad.setBackground(UiKomponente.PANEL);
         dugmad.add(dodajUslugu);
+        dugmad.add(izdaj);
         dugmad.add(odbij);
         dugmad.add(potvrdi);
         panel.add(new JScrollPane(tabela), BorderLayout.CENTER);
@@ -103,6 +116,130 @@ public class AgentPanel extends JPanel {
                 : "Rezervacija nije odbijena. Proverite njen status.");
         JOptionPane.showMessageDialog(this, poruka);
         if (uspesno) osvezi.run();
+    }
+
+    private void izdajVozilo(JTable tabela, DefaultTableModel model) {
+        int red = tabela.getSelectedRow();
+        if (red == -1) {
+            JOptionPane.showMessageDialog(this, "Izaberite rezervaciju u tabeli.");
+            return;
+        }
+
+        int rezervacijaId = (int) model.getValueAt(red, 0);
+        ArrayList<Vozilo> dostupnaVozila = izdavanjeMenadzer.ucitajDostupnaVozilaZaRezervaciju(rezervacijaId);
+        if (dostupnaVozila.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Nema dostupnih vozila za izabranu rezervaciju.");
+            return;
+        }
+
+        JComboBox<Vozilo> voziloBox = new JComboBox<>();
+        for (Vozilo vozilo : dostupnaVozila) {
+            voziloBox.addItem(vozilo);
+        }
+
+        JTextField kilometraza = new JTextField(String.valueOf(dostupnaVozila.get(0).getKilometraza()));
+        JPanel forma = new JPanel(new GridBagLayout());
+        forma.setBackground(UiKomponente.PANEL);
+        int formaRed = 0;
+        formaRed = UiKomponente.dodajPolje(forma, formaRed, "Vozilo", voziloBox);
+        UiKomponente.dodajPolje(forma, formaRed, "Kilometraza", kilometraza);
+
+        int izbor = JOptionPane.showConfirmDialog(this, forma, "Izdavanje vozila",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (izbor != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        try {
+            Vozilo vozilo = (Vozilo) voziloBox.getSelectedItem();
+            boolean uspesno = vozilo != null && izdavanjeMenadzer.izdajVozilo(
+                    agent, rezervacijaId, vozilo.getId(), Integer.parseInt(kilometraza.getText().trim()));
+
+            JOptionPane.showMessageDialog(this, uspesno ? "Vozilo je izdato."
+                    : "Vozilo nije izdato. Rezervacija mora biti potvrdjena i ne sme vec imati izdavanje.");
+            if (uspesno) osvezi.run();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Kilometraza mora biti ceo broj.");
+        }
+    }
+
+    private JPanel izdavanjaPanel() {
+        JPanel panel = UiKomponente.kartica(new BorderLayout(0, 12));
+        panel.add(UiKomponente.naslovSekcije("Aktivna izdavanja"), BorderLayout.NORTH);
+        DefaultTableModel model = UiKomponente.modelTabele(
+                new String[]{"ID", "Rezervacija", "Klijent", "Vozilo", "Planirano vracanje", "Km preuzimanje"});
+
+        for (Izdavanje izdavanje : izdavanjeMenadzer.ucitajAktivnaIzdavanja()) {
+            model.addRow(new Object[]{izdavanje.getId(), izdavanje.getRezervacija().getId(),
+                    izdavanje.getRezervacija().getKlijent().getIme() + " "
+                            + izdavanje.getRezervacija().getKlijent().getPrezime(),
+                    izdavanje.getVozilo().getRegistracija(), izdavanje.getDatumVracanjaPlanirano(),
+                    izdavanje.getKilometrazaPreuzimanje()});
+        }
+
+        JTable tabela = UiKomponente.tabela(model);
+        JButton vrati = UiKomponente.primarnoDugme("Vrati vozilo");
+        vrati.addActionListener(e -> vratiVozilo(tabela, model));
+        JPanel dugmad = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        dugmad.setBackground(UiKomponente.PANEL);
+        dugmad.add(vrati);
+        panel.add(new JScrollPane(tabela), BorderLayout.CENTER);
+        panel.add(dugmad, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private void vratiVozilo(JTable tabela, DefaultTableModel model) {
+        int red = tabela.getSelectedRow();
+        if (red == -1) {
+            JOptionPane.showMessageDialog(this, "Izaberite izdavanje u tabeli.");
+            return;
+        }
+
+        int izdavanjeId = (int) model.getValueAt(red, 0);
+        JTextField datumVracanja = new JTextField(LocalDate.now().toString());
+        JTextField kilometraza = new JTextField();
+        JTextField kazna = new JTextField("0");
+        JPanel forma = new JPanel(new GridBagLayout());
+        forma.setBackground(UiKomponente.PANEL);
+        int formaRed = 0;
+        formaRed = UiKomponente.dodajPolje(forma, formaRed, "Datum vracanja", datumVracanja);
+        formaRed = UiKomponente.dodajPolje(forma, formaRed, "Kilometraza", kilometraza);
+        UiKomponente.dodajPolje(forma, formaRed, "Kazna", kazna);
+
+        int izbor = JOptionPane.showConfirmDialog(this, forma, "Vracanje vozila",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (izbor != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        try {
+            boolean uspesno = izdavanjeMenadzer.vratiVozilo(agent, izdavanjeId,
+                    LocalDate.parse(datumVracanja.getText().trim()),
+                    Integer.parseInt(kilometraza.getText().trim()),
+                    Double.parseDouble(kazna.getText().trim().replace(',', '.')));
+            JOptionPane.showMessageDialog(this, uspesno ? "Vozilo je vraceno."
+                    : "Vozilo nije vraceno. Proverite kilometrazu i podatke izdavanja.");
+            if (uspesno) osvezi.run();
+        } catch (DateTimeParseException ex) {
+            JOptionPane.showMessageDialog(this, "Datum mora biti u formatu GGGG-MM-DD.");
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Kilometraza mora biti ceo broj, a kazna broj.");
+        }
+    }
+
+    private JPanel vozilaPanel() {
+        JPanel panel = UiKomponente.kartica(new BorderLayout(0, 12));
+        panel.add(UiKomponente.naslovSekcije("Vozila"), BorderLayout.NORTH);
+        DefaultTableModel model = UiKomponente.modelTabele(
+                new String[]{"ID", "Model", "Registracija", "Status", "Kilometraza"});
+
+        for (Vozilo vozilo : izdavanjeMenadzer.ucitajVozila()) {
+            model.addRow(new Object[]{vozilo.getId(), vozilo.getModelVozila(),
+                    vozilo.getRegistracija(), vozilo.getStatus(), vozilo.getKilometraza()});
+        }
+
+        panel.add(new JScrollPane(UiKomponente.tabela(model)), BorderLayout.CENTER);
+        return panel;
     }
 
     private void dodajDodatnuUslugu(JTable tabela, DefaultTableModel model) {

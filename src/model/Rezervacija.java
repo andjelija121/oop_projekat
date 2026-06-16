@@ -75,6 +75,10 @@ public class Rezervacija {
         return kazna;
     }
 
+    public void setKazna(double kazna) {
+        this.kazna = kazna;
+    }
+
     public double getCenaUkupno() {
         return cenaUkupno;
     }

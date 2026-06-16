@@ -96,6 +96,16 @@ public class KorisnikRepozitorijum {
         return null;
     }
 
+    public Agent pronadjiAgentaPoId(int id) {
+        for (Agent agent : ucitajAgente()) {
+            if (agent.getId() == id) {
+                return agent;
+            }
+        }
+
+        return null;
+    }
+
     public boolean korisnickoImePostoji(String korisnickoIme) {
         for (Korisnik korisnik : ucitajSve()) {
             if (korisnik.getKorisnickoIme().equals(korisnickoIme)) {

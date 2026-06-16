@@ -61,4 +61,45 @@ public class VoziloRepozitorijum {
 
         return vozilaModela;
     }
+
+    public Vozilo pronadjiPoId(int id) {
+        for (Vozilo vozilo : ucitajSve()) {
+            if (vozilo.getId() == id) {
+                return vozilo;
+            }
+        }
+
+        return null;
+    }
+
+    public void azuriraj(Vozilo vozilo) {
+        try {
+            ArrayList<String> linije = new ArrayList<>(Files.readAllLines(Path.of(putanjaDoFajla)));
+
+            for (int i = 1; i < linije.size(); i++) {
+                if (linije.get(i).isBlank()) {
+                    continue;
+                }
+
+                String[] delovi = linije.get(i).split(",", -1);
+                int id = Integer.parseInt(delovi[0]);
+
+                if (id == vozilo.getId()) {
+                    linije.set(i, napraviCsvLiniju(vozilo));
+                    break;
+                }
+            }
+
+            linije.removeIf(String::isBlank);
+            Files.write(Path.of(putanjaDoFajla), linije);
+        } catch (IOException e) {
+            System.out.println("Greska prilikom azuriranja vozila u fajlu: " + putanjaDoFajla);
+        }
+    }
+
+    private String napraviCsvLiniju(Vozilo vozilo) {
+        return vozilo.getId() + "," + vozilo.getModelVozila().getId() + ","
+                + vozilo.getRegistracija() + "," + vozilo.getStatus() + ","
+                + vozilo.getKilometraza();
+    }
 }

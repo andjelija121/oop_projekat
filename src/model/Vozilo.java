@@ -33,7 +33,20 @@ public class Vozilo {
         return status;
     }
 
+    public void setStatus(StatusVozila status) {
+        this.status = status;
+    }
+
     public int getKilometraza() {
         return kilometraza;
+    }
+
+    public void setKilometraza(int kilometraza) {
+        this.kilometraza = kilometraza;
+    }
+
+    @Override
+    public String toString() {
+        return registracija + " - " + modelVozila;
     }
 }

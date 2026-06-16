@@ -1,5 +1,6 @@
 package ui;
 
+import menadzment.IzdavanjeMenadzer;
 import menadzment.KlijentMenadzer;
 import menadzment.PrijavaMenadzer;
 import menadzment.RezervacijaMenadzer;
@@ -15,6 +16,7 @@ import repozitorijum.RezervacijaRepozitorijum;
 import repozitorijum.VoziloRepozitorijum;
 import repozitorijum.CenovnikRepozitorijum;
 import repozitorijum.DodatnaUslugaRepozitorijum;
+import repozitorijum.IzdavanjeRepozitorijum;
 import repozitorijum.RezervacijaUslugaRepozitorijum;
 
 import javax.swing.JFrame;
@@ -29,6 +31,7 @@ public class AplikacijaFrame extends JFrame {
     private final ZaposleniMenadzer zaposleniMenadzer;
     private final KlijentMenadzer klijentMenadzer;
     private final RezervacijaMenadzer rezervacijaMenadzer;
+    private final IzdavanjeMenadzer izdavanjeMenadzer;
     private final CenovnikMenadzer cenovnikMenadzer;
     private final DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum;
     private final RezervacijaUslugaRepozitorijum rezervacijaUslugaRepozitorijum;
@@ -46,6 +49,9 @@ public class AplikacijaFrame extends JFrame {
                 "src/fajlovi/rezervacije.csv", korisnikRepozitorijum, modeli);
         rezervacijaUslugaRepozitorijum = new RezervacijaUslugaRepozitorijum();
         rezervacijaMenadzer = new RezervacijaMenadzer(rezervacije, vozila, modeli, rezervacijaUslugaRepozitorijum);
+        IzdavanjeRepozitorijum izdavanja = new IzdavanjeRepozitorijum(
+                "src/fajlovi/izdavanja.csv", rezervacije, korisnikRepozitorijum, vozila);
+        izdavanjeMenadzer = new IzdavanjeMenadzer(izdavanja, rezervacije, vozila);
         dodatnaUslugaRepozitorijum = new DodatnaUslugaRepozitorijum();
         cenovnikMenadzer = new CenovnikMenadzer(new CenovnikRepozitorijum());
         rezervacijaMenadzer.odbijIstekleRezervacije();
@@ -80,7 +86,7 @@ public class AplikacijaFrame extends JFrame {
         } else if (ulogovaniKorisnik instanceof Agent) {
             rezervacijaMenadzer.odbijIstekleRezervacije();
             setContentPane(new AgentPanel(ulogovaniKorisnik, korisnikRepozitorijum, klijentMenadzer,
-                    rezervacijaMenadzer, cenovnikMenadzer, dodatnaUslugaRepozitorijum,
+                    rezervacijaMenadzer, izdavanjeMenadzer, cenovnikMenadzer, dodatnaUslugaRepozitorijum,
                     this::prikaziGlavniEkran, this::prikaziLogin));
         } else if (ulogovaniKorisnik instanceof Klijent) {
             setContentPane(new KlijentPanel((Klijent) ulogovaniKorisnik, rezervacijaMenadzer,
