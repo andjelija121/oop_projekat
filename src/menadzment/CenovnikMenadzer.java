@@ -72,6 +72,27 @@ public class CenovnikMenadzer {
         return cenaNajma + cenaDodatnihUsluga;
     }
 
+    public double pronadjiCenuDodatneUsluge(LocalDate datum, DodatnaUsluga dodatnaUsluga) {
+        if (datum == null || dodatnaUsluga == null) {
+            return 0;
+        }
+
+        Cenovnik cenovnik = cenovnikRepozitorijum.pronadjiVazeciCenovnik(datum);
+        if (cenovnik == null) {
+            return 0;
+        }
+
+        for (StavkaCenovnika stavka : cenovnik.getStavke()) {
+            if (stavka.getTipCene() == TipCene.DODATNA_USLUGA
+                    && stavka.getDodatnaUsluga() != null
+                    && stavka.getDodatnaUsluga().getId() == dodatnaUsluga.getId()) {
+                return stavka.getVrednost();
+            }
+        }
+
+        return 0;
+    }
+
     private int izracunajBrojDana(LocalDate datumOd, LocalDate datumDo) {
         int brojDana = 1;
         LocalDate datum = datumOd;

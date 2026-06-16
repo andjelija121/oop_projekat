@@ -15,6 +15,7 @@ import repozitorijum.RezervacijaRepozitorijum;
 import repozitorijum.VoziloRepozitorijum;
 import repozitorijum.CenovnikRepozitorijum;
 import repozitorijum.DodatnaUslugaRepozitorijum;
+import repozitorijum.RezervacijaUslugaRepozitorijum;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -30,6 +31,7 @@ public class AplikacijaFrame extends JFrame {
     private final RezervacijaMenadzer rezervacijaMenadzer;
     private final CenovnikMenadzer cenovnikMenadzer;
     private final DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum;
+    private final RezervacijaUslugaRepozitorijum rezervacijaUslugaRepozitorijum;
     private Korisnik ulogovaniKorisnik;
 
     public AplikacijaFrame() {
@@ -42,7 +44,8 @@ public class AplikacijaFrame extends JFrame {
         VoziloRepozitorijum vozila = new VoziloRepozitorijum("src/fajlovi/vozila.csv", modeli);
         RezervacijaRepozitorijum rezervacije = new RezervacijaRepozitorijum(
                 "src/fajlovi/rezervacije.csv", korisnikRepozitorijum, modeli);
-        rezervacijaMenadzer = new RezervacijaMenadzer(rezervacije, vozila, modeli);
+        rezervacijaUslugaRepozitorijum = new RezervacijaUslugaRepozitorijum();
+        rezervacijaMenadzer = new RezervacijaMenadzer(rezervacije, vozila, modeli, rezervacijaUslugaRepozitorijum);
         dodatnaUslugaRepozitorijum = new DodatnaUslugaRepozitorijum();
         cenovnikMenadzer = new CenovnikMenadzer(new CenovnikRepozitorijum());
         rezervacijaMenadzer.odbijIstekleRezervacije();
@@ -77,7 +80,8 @@ public class AplikacijaFrame extends JFrame {
         } else if (ulogovaniKorisnik instanceof Agent) {
             rezervacijaMenadzer.odbijIstekleRezervacije();
             setContentPane(new AgentPanel(ulogovaniKorisnik, korisnikRepozitorijum, klijentMenadzer,
-                    rezervacijaMenadzer, this::prikaziGlavniEkran, this::prikaziLogin));
+                    rezervacijaMenadzer, cenovnikMenadzer, dodatnaUslugaRepozitorijum,
+                    this::prikaziGlavniEkran, this::prikaziLogin));
         } else if (ulogovaniKorisnik instanceof Klijent) {
             setContentPane(new KlijentPanel((Klijent) ulogovaniKorisnik, rezervacijaMenadzer,
                     cenovnikMenadzer, dodatnaUslugaRepozitorijum,

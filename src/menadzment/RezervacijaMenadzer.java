@@ -2,12 +2,15 @@ package menadzment;
 
 import enums.StatusRezervacije;
 import model.Agent;
+import model.DodatnaUsluga;
 import model.Klijent;
 import model.Korisnik;
 import model.ModelVozila;
 import model.Rezervacija;
+import model.RezervacijaUsluga;
 import repozitorijum.ModelVozilaRepozitorijum;
 import repozitorijum.RezervacijaRepozitorijum;
+import repozitorijum.RezervacijaUslugaRepozitorijum;
 import repozitorijum.VoziloRepozitorijum;
 
 import java.time.LocalDate;
@@ -17,13 +20,23 @@ public class RezervacijaMenadzer {
     private RezervacijaRepozitorijum rezervacijaRepozitorijum;
     private VoziloRepozitorijum voziloRepozitorijum;
     private ModelVozilaRepozitorijum modelVozilaRepozitorijum;
+    private RezervacijaUslugaRepozitorijum rezervacijaUslugaRepozitorijum;
 
     public RezervacijaMenadzer(RezervacijaRepozitorijum rezervacijaRepozitorijum,
                               VoziloRepozitorijum voziloRepozitorijum,
                               ModelVozilaRepozitorijum modelVozilaRepozitorijum) {
+        this(rezervacijaRepozitorijum, voziloRepozitorijum, modelVozilaRepozitorijum,
+                new RezervacijaUslugaRepozitorijum());
+    }
+
+    public RezervacijaMenadzer(RezervacijaRepozitorijum rezervacijaRepozitorijum,
+                              VoziloRepozitorijum voziloRepozitorijum,
+                              ModelVozilaRepozitorijum modelVozilaRepozitorijum,
+                              RezervacijaUslugaRepozitorijum rezervacijaUslugaRepozitorijum) {
         this.rezervacijaRepozitorijum = rezervacijaRepozitorijum;
         this.voziloRepozitorijum = voziloRepozitorijum;
         this.modelVozilaRepozitorijum = modelVozilaRepozitorijum;
+        this.rezervacijaUslugaRepozitorijum = rezervacijaUslugaRepozitorijum;
     }
 
     public boolean daLiJeModelDostupan(ModelVozila modelVozila, LocalDate datumOd, LocalDate datumDo) {
@@ -66,28 +79,28 @@ public class RezervacijaMenadzer {
         return true;
     }
 
-    public boolean napraviZahtevZaRezervaciju(Klijent klijent, ModelVozila modelVozila,
+    public Rezervacija napraviZahtevZaRezervaciju(Klijent klijent, ModelVozila modelVozila,
                                                LocalDate datumOd, LocalDate datumDo,
                                                double cenaNajma, double cenaDodatnihUsluga,
                                                double cenaUkupno) {
         if (klijent == null || modelVozila == null) {
-            return false;
+            return null;
         }
 
         if (modelVozilaRepozitorijum.pronadjiPoId(modelVozila.getId()) == null) {
-            return false;
+            return null;
         }
 
         if (!validanPeriodZaNoviZahtev(datumOd, datumDo)) {
-            return false;
+            return null;
         }
 
         if (!klijent.vazecaDozvola()) {
-            return false;
+            return null;
         }
 
         if (!daLiJeModelDostupan(modelVozila, datumOd, datumDo)) {
-            return false;
+            return null;
         }
 
         Rezervacija rezervacija = new Rezervacija(
@@ -104,6 +117,55 @@ public class RezervacijaMenadzer {
         );
 
         rezervacijaRepozitorijum.dodaj(rezervacija);
+        return rezervacija;
+    }
+
+    public boolean evidentirajDodatnuUsluguRezervacije(int rezervacijaId, DodatnaUsluga dodatnaUsluga,
+                                                       int kolicina, double cenaPoJedinici) {
+        return evidentirajDodatnuUslugu(rezervacijaId, dodatnaUsluga, kolicina, cenaPoJedinici, false);
+    }
+
+    public boolean dodajDodatnuUsluguNaRezervaciju(Korisnik ulogovaniKorisnik, int rezervacijaId,
+                                                   DodatnaUsluga dodatnaUsluga, int kolicina,
+                                                   double cenaPoJedinici) {
+        if (!(ulogovaniKorisnik instanceof Agent)) {
+            return false;
+        }
+
+        Rezervacija rezervacija = rezervacijaRepozitorijum.pronadjiPoId(rezervacijaId);
+        if (rezervacija == null || rezervacija.getStatus() != StatusRezervacije.POTVRDJENA) {
+            return false;
+        }
+
+        return evidentirajDodatnuUslugu(rezervacijaId, dodatnaUsluga, kolicina, cenaPoJedinici, true);
+    }
+
+    private boolean evidentirajDodatnuUslugu(int rezervacijaId, DodatnaUsluga dodatnaUsluga,
+                                             int kolicina, double cenaPoJedinici, boolean azurirajCenu) {
+        Rezervacija rezervacija = rezervacijaRepozitorijum.pronadjiPoId(rezervacijaId);
+
+        if (rezervacija == null || dodatnaUsluga == null || kolicina <= 0 || cenaPoJedinici < 0) {
+            return false;
+        }
+
+        double ukupno = cenaPoJedinici * kolicina;
+        RezervacijaUsluga rezervacijaUsluga = new RezervacijaUsluga(
+                rezervacijaUslugaRepozitorijum.sledeciId(),
+                rezervacijaId,
+                dodatnaUsluga,
+                kolicina,
+                cenaPoJedinici,
+                ukupno
+        );
+
+        rezervacijaUslugaRepozitorijum.dodaj(rezervacijaUsluga);
+
+        if (azurirajCenu) {
+            rezervacija.setCenaDodatnihUsluga(rezervacija.getCenaDodatnihUsluga() + ukupno);
+            rezervacija.setCenaUkupno(rezervacija.getCenaUkupno() + ukupno);
+            rezervacijaRepozitorijum.azuriraj(rezervacija);
+        }
+
         return true;
     }
 
@@ -216,6 +278,10 @@ public class RezervacijaMenadzer {
         }
 
         return rezultat;
+    }
+
+    public ArrayList<RezervacijaUsluga> ucitajDodatneUslugeRezervacije(int rezervacijaId) {
+        return rezervacijaUslugaRepozitorijum.pronadjiPoRezervaciji(rezervacijaId);
     }
 
 }

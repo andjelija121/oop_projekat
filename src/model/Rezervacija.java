@@ -67,12 +67,20 @@ public class Rezervacija {
         return cenaDodatnihUsluga;
     }
 
+    public void setCenaDodatnihUsluga(double cenaDodatnihUsluga) {
+        this.cenaDodatnihUsluga = cenaDodatnihUsluga;
+    }
+
     public double getKazna() {
         return kazna;
     }
 
     public double getCenaUkupno() {
         return cenaUkupno;
+    }
+
+    public void setCenaUkupno(double cenaUkupno) {
+        this.cenaUkupno = cenaUkupno;
     }
 
     public boolean jeNaCekanju() {

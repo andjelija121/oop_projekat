@@ -2,11 +2,16 @@ package ui;
 
 import enums.KategorijaKlijenta;
 import enums.Pol;
+import enums.TipNaplate;
+import menadzment.CenovnikMenadzer;
 import menadzment.KlijentMenadzer;
 import menadzment.RezervacijaMenadzer;
+import model.DodatnaUsluga;
 import model.Klijent;
 import model.Korisnik;
 import model.Rezervacija;
+import model.RezervacijaUsluga;
+import repozitorijum.DodatnaUslugaRepozitorijum;
 import repozitorijum.KorisnikRepozitorijum;
 
 import javax.swing.JButton;
@@ -22,21 +27,29 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridBagLayout;
+import java.time.LocalDate;
+import java.util.ArrayList;
 
 public class AgentPanel extends JPanel {
     private final Korisnik agent;
     private final KorisnikRepozitorijum korisnici;
     private final KlijentMenadzer klijentMenadzer;
     private final RezervacijaMenadzer rezervacijaMenadzer;
+    private final CenovnikMenadzer cenovnikMenadzer;
+    private final DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum;
     private final Runnable osvezi;
 
     public AgentPanel(Korisnik agent, KorisnikRepozitorijum korisnici, KlijentMenadzer klijentMenadzer,
-                      RezervacijaMenadzer rezervacijaMenadzer, Runnable osvezi, Runnable odjava) {
+                      RezervacijaMenadzer rezervacijaMenadzer, CenovnikMenadzer cenovnikMenadzer,
+                      DodatnaUslugaRepozitorijum dodatnaUslugaRepozitorijum,
+                      Runnable osvezi, Runnable odjava) {
         super(new BorderLayout());
         this.agent = agent;
         this.korisnici = korisnici;
         this.klijentMenadzer = klijentMenadzer;
         this.rezervacijaMenadzer = rezervacijaMenadzer;
+        this.cenovnikMenadzer = cenovnikMenadzer;
+        this.dodatnaUslugaRepozitorijum = dodatnaUslugaRepozitorijum;
         this.osvezi = osvezi;
 
         JTabbedPane tabs = UiKomponente.tabovi();
@@ -50,21 +63,25 @@ public class AgentPanel extends JPanel {
         JPanel panel = UiKomponente.kartica(new BorderLayout(0, 12));
         panel.add(UiKomponente.naslovSekcije("Rezervacije"), BorderLayout.NORTH);
         DefaultTableModel model = UiKomponente.modelTabele(
-                new String[]{"ID", "Klijent", "Model", "Datum od", "Datum do", "Status"});
+                new String[]{"ID", "Klijent", "Model", "Datum od", "Datum do", "Status", "Dodatne usluge", "Ukupno"});
         for (Rezervacija rezervacija : rezervacijaMenadzer.ucitajSveRezervacije()) {
             model.addRow(new Object[]{rezervacija.getId(),
                     rezervacija.getKlijent().getIme() + " " + rezervacija.getKlijent().getPrezime(),
                     rezervacija.getModelVozila(), rezervacija.getDatumOd(), rezervacija.getDatumDo(),
-                    rezervacija.getStatus()});
+                    rezervacija.getStatus(), opisDodatnihUsluga(rezervacija.getId()),
+                    rezervacija.getCenaUkupno()});
         }
 
         JTable tabela = UiKomponente.tabela(model);
         JButton potvrdi = UiKomponente.primarnoDugme("Potvrdi");
         JButton odbij = new JButton("Odbij");
+        JButton dodajUslugu = new JButton("Dodaj dodatnu uslugu");
         potvrdi.addActionListener(e -> obradiRezervaciju(tabela, model, true));
         odbij.addActionListener(e -> obradiRezervaciju(tabela, model, false));
+        dodajUslugu.addActionListener(e -> dodajDodatnuUslugu(tabela, model));
         JPanel dugmad = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         dugmad.setBackground(UiKomponente.PANEL);
+        dugmad.add(dodajUslugu);
         dugmad.add(odbij);
         dugmad.add(potvrdi);
         panel.add(new JScrollPane(tabela), BorderLayout.CENTER);
@@ -86,6 +103,106 @@ public class AgentPanel extends JPanel {
                 : "Rezervacija nije odbijena. Proverite njen status.");
         JOptionPane.showMessageDialog(this, poruka);
         if (uspesno) osvezi.run();
+    }
+
+    private void dodajDodatnuUslugu(JTable tabela, DefaultTableModel model) {
+        int red = tabela.getSelectedRow();
+        if (red == -1) {
+            JOptionPane.showMessageDialog(this, "Izaberite rezervaciju u tabeli.");
+            return;
+        }
+
+        int rezervacijaId = (int) model.getValueAt(red, 0);
+        JComboBox<DodatnaUsluga> uslugaBox = new JComboBox<>();
+        for (DodatnaUsluga dodatnaUsluga : dodatnaUslugaRepozitorijum.ucitajSve()) {
+            uslugaBox.addItem(dodatnaUsluga);
+        }
+
+        JPanel forma = new JPanel(new GridBagLayout());
+        forma.setBackground(UiKomponente.PANEL);
+        UiKomponente.dodajPolje(forma, 0, "Dodatna usluga", uslugaBox);
+
+        int izbor = JOptionPane.showConfirmDialog(this, forma, "Dodaj dodatnu uslugu",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (izbor != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        try {
+            DodatnaUsluga dodatnaUsluga = (DodatnaUsluga) uslugaBox.getSelectedItem();
+
+            if (dodatnaUsluga == null) {
+                return;
+            }
+
+            int izabranaKolicina = odrediKolicinuDodatneUsluge(dodatnaUsluga);
+            if (izabranaKolicina <= 0) {
+                return;
+            }
+
+            double cenaPoJedinici = cenovnikMenadzer.pronadjiCenuDodatneUsluge(LocalDate.now(), dodatnaUsluga);
+            boolean uspesno = rezervacijaMenadzer.dodajDodatnuUsluguNaRezervaciju(
+                    agent, rezervacijaId, dodatnaUsluga, izabranaKolicina, cenaPoJedinici);
+
+            JOptionPane.showMessageDialog(this, uspesno ? "Dodatna usluga je dodata."
+                    : "Dodatna usluga nije dodata. Rezervacija mora biti potvrdjena.");
+            if (uspesno) osvezi.run();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Broj dana mora biti broj.");
+        }
+    }
+
+    private int odrediKolicinuDodatneUsluge(DodatnaUsluga dodatnaUsluga) {
+        if (dodatnaUsluga.getTipNaplate() != TipNaplate.PO_DANU) {
+            return 1;
+        }
+
+        JTextField brojDanaField = new JTextField("1");
+        JPanel forma = new JPanel(new GridBagLayout());
+        forma.setBackground(UiKomponente.PANEL);
+        UiKomponente.dodajPolje(forma, 0, "Broj dodatnih dana", brojDanaField);
+
+        int izbor = JOptionPane.showConfirmDialog(this, forma, "Produzeno koriscenje",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (izbor != JOptionPane.OK_OPTION) {
+            return 0;
+        }
+
+        String unos = brojDanaField.getText();
+        if (unos == null) {
+            return 0;
+        }
+
+        int brojDana = Integer.parseInt(unos);
+        if (brojDana <= 0) {
+            JOptionPane.showMessageDialog(this, "Broj dana mora biti pozitivan broj.");
+            return 0;
+        }
+
+        return brojDana;
+    }
+
+    private String opisDodatnihUsluga(int rezervacijaId) {
+        ArrayList<RezervacijaUsluga> usluge = rezervacijaMenadzer.ucitajDodatneUslugeRezervacije(rezervacijaId);
+
+        if (usluge.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder opis = new StringBuilder();
+        for (RezervacijaUsluga usluga : usluge) {
+            if (opis.length() > 0) {
+                opis.append("; ");
+            }
+
+            opis.append(usluga.getDodatnaUsluga().getNaziv());
+
+            if (usluga.getDodatnaUsluga().getTipNaplate() == TipNaplate.PO_DANU) {
+                opis.append(" x").append(usluga.getKolicina());
+            }
+        }
+
+        return opis.toString();
     }
 
     private JPanel klijentiPanel() {
