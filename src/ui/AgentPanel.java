@@ -72,13 +72,14 @@ public class AgentPanel extends JPanel {
         panel.add(UiKomponente.naslovSekcije("Rezervacije"), BorderLayout.NORTH);
         DefaultTableModel model = UiKomponente.modelTabele(
                 new String[]{"ID", "Klijent", "Model", "Datum od", "Datum do", "Status",
-                        "Izdavanje", "Dodatne usluge", "Ukupno"});
+                        "Izdavanje", "Dodatne usluge", "Kazna", "Ukupno"});
         for (Rezervacija rezervacija : rezervacijaMenadzer.ucitajSveRezervacije()) {
             model.addRow(new Object[]{rezervacija.getId(),
                     rezervacija.getKlijent().getIme() + " " + rezervacija.getKlijent().getPrezime(),
                     rezervacija.getModelVozila(), rezervacija.getDatumOd(), rezervacija.getDatumDo(),
                     rezervacija.getStatus(), izdavanjeMenadzer.opisIzdavanjaRezervacije(rezervacija.getId()),
                     opisDodatnihUsluga(rezervacija.getId()),
+                    rezervacija.getKazna(),
                     rezervacija.getCenaUkupno()});
         }
 
@@ -198,13 +199,11 @@ public class AgentPanel extends JPanel {
         int izdavanjeId = (int) model.getValueAt(red, 0);
         JTextField datumVracanja = new JTextField(LocalDate.now().toString());
         JTextField kilometraza = new JTextField();
-        JTextField kazna = new JTextField("0");
         JPanel forma = new JPanel(new GridBagLayout());
         forma.setBackground(UiKomponente.PANEL);
         int formaRed = 0;
         formaRed = UiKomponente.dodajPolje(forma, formaRed, "Datum vracanja", datumVracanja);
-        formaRed = UiKomponente.dodajPolje(forma, formaRed, "Kilometraza", kilometraza);
-        UiKomponente.dodajPolje(forma, formaRed, "Kazna", kazna);
+        UiKomponente.dodajPolje(forma, formaRed, "Kilometraza", kilometraza);
 
         int izbor = JOptionPane.showConfirmDialog(this, forma, "Vracanje vozila",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
@@ -215,15 +214,14 @@ public class AgentPanel extends JPanel {
         try {
             boolean uspesno = izdavanjeMenadzer.vratiVozilo(agent, izdavanjeId,
                     LocalDate.parse(datumVracanja.getText().trim()),
-                    Integer.parseInt(kilometraza.getText().trim()),
-                    Double.parseDouble(kazna.getText().trim().replace(',', '.')));
+                    Integer.parseInt(kilometraza.getText().trim()));
             JOptionPane.showMessageDialog(this, uspesno ? "Vozilo je vraceno."
-                    : "Vozilo nije vraceno. Proverite kilometrazu i podatke izdavanja.");
+                    : "Vozilo nije vraceno. Proverite datum, kilometrazu i podatke izdavanja.");
             if (uspesno) osvezi.run();
         } catch (DateTimeParseException ex) {
             JOptionPane.showMessageDialog(this, "Datum mora biti u formatu GGGG-MM-DD.");
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Kilometraza mora biti ceo broj, a kazna broj.");
+            JOptionPane.showMessageDialog(this, "Kilometraza mora biti ceo broj.");
         }
     }
 

@@ -49,11 +49,11 @@ public class AplikacijaFrame extends JFrame {
                 "src/fajlovi/rezervacije.csv", korisnikRepozitorijum, modeli);
         rezervacijaUslugaRepozitorijum = new RezervacijaUslugaRepozitorijum();
         rezervacijaMenadzer = new RezervacijaMenadzer(rezervacije, vozila, modeli, rezervacijaUslugaRepozitorijum);
+        cenovnikMenadzer = new CenovnikMenadzer(new CenovnikRepozitorijum());
         IzdavanjeRepozitorijum izdavanja = new IzdavanjeRepozitorijum(
                 "src/fajlovi/izdavanja.csv", rezervacije, korisnikRepozitorijum, vozila);
-        izdavanjeMenadzer = new IzdavanjeMenadzer(izdavanja, rezervacije, vozila);
+        izdavanjeMenadzer = new IzdavanjeMenadzer(izdavanja, rezervacije, vozila, cenovnikMenadzer);
         dodatnaUslugaRepozitorijum = new DodatnaUslugaRepozitorijum();
-        cenovnikMenadzer = new CenovnikMenadzer(new CenovnikRepozitorijum());
         rezervacijaMenadzer.odbijIstekleRezervacije();
 
         setTitle("Rent a Car");

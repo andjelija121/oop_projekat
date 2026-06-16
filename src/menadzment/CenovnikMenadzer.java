@@ -9,6 +9,7 @@ import model.StavkaCenovnika;
 import repozitorijum.CenovnikRepozitorijum;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
 public class CenovnikMenadzer {
@@ -93,6 +94,21 @@ public class CenovnikMenadzer {
         return 0;
     }
 
+    public double izracunajKaznuKasnjenja(LocalDate datumPlaniranogVracanja, LocalDate datumStvarnogVracanja) {
+        if (datumPlaniranogVracanja == null || datumStvarnogVracanja == null
+                || !datumStvarnogVracanja.isAfter(datumPlaniranogVracanja)) {
+            return 0;
+        }
+
+        Cenovnik cenovnik = cenovnikRepozitorijum.pronadjiVazeciCenovnik(datumStvarnogVracanja);
+        if (cenovnik == null) {
+            return 0;
+        }
+
+        int brojDanaKasnjenja = (int) ChronoUnit.DAYS.between(datumPlaniranogVracanja, datumStvarnogVracanja);
+        return brojDanaKasnjenja * pronadjiKaznuKasnjenja(cenovnik);
+    }
+
     private int izracunajBrojDana(LocalDate datumOd, LocalDate datumDo) {
         int brojDana = 1;
         LocalDate datum = datumOd;
@@ -167,6 +183,16 @@ public class CenovnikMenadzer {
             if (stavka.getTipCene() == TipCene.DODATNA_USLUGA
                     && stavka.getDodatnaUsluga() != null
                     && stavka.getDodatnaUsluga().getNaziv().equals("PRODUZENO_KORISCENJE")) {
+                return stavka.getVrednost();
+            }
+        }
+
+        return 0;
+    }
+
+    private double pronadjiKaznuKasnjenja(Cenovnik cenovnik) {
+        for (StavkaCenovnika stavka : cenovnik.getStavke()) {
+            if (stavka.getTipCene() == TipCene.KAZNA_KASNJENJA) {
                 return stavka.getVrednost();
             }
         }

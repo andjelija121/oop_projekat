@@ -18,13 +18,16 @@ public class IzdavanjeMenadzer {
     private IzdavanjeRepozitorijum izdavanjeRepozitorijum;
     private RezervacijaRepozitorijum rezervacijaRepozitorijum;
     private VoziloRepozitorijum voziloRepozitorijum;
+    private CenovnikMenadzer cenovnikMenadzer;
 
     public IzdavanjeMenadzer(IzdavanjeRepozitorijum izdavanjeRepozitorijum,
                              RezervacijaRepozitorijum rezervacijaRepozitorijum,
-                             VoziloRepozitorijum voziloRepozitorijum) {
+                             VoziloRepozitorijum voziloRepozitorijum,
+                             CenovnikMenadzer cenovnikMenadzer) {
         this.izdavanjeRepozitorijum = izdavanjeRepozitorijum;
         this.rezervacijaRepozitorijum = rezervacijaRepozitorijum;
         this.voziloRepozitorijum = voziloRepozitorijum;
+        this.cenovnikMenadzer = cenovnikMenadzer;
     }
 
     public boolean izdajVozilo(Korisnik ulogovaniKorisnik, int rezervacijaId, int voziloId,
@@ -77,8 +80,8 @@ public class IzdavanjeMenadzer {
     }
 
     public boolean vratiVozilo(Korisnik ulogovaniKorisnik, int izdavanjeId, LocalDate datumVracanja,
-                               int kilometrazaVracanje, double kazna) {
-        if (!(ulogovaniKorisnik instanceof Agent) || datumVracanja == null || kazna < 0) {
+                               int kilometrazaVracanje) {
+        if (!(ulogovaniKorisnik instanceof Agent) || datumVracanja == null) {
             return false;
         }
 
@@ -87,7 +90,7 @@ public class IzdavanjeMenadzer {
             return false;
         }
 
-        if (datumVracanja.isBefore(izdavanje.getDatumIzdavanja())) {
+        if (datumVracanja.isBefore(izdavanje.getDatumIzdavanja()) || datumVracanja.isAfter(LocalDate.now())) {
             return false;
         }
 
@@ -110,6 +113,8 @@ public class IzdavanjeMenadzer {
         vozilo.setKilometraza(kilometrazaVracanje);
         voziloRepozitorijum.azuriraj(vozilo);
 
+        double kazna = cenovnikMenadzer.izracunajKaznuKasnjenja(
+                izdavanje.getDatumVracanjaPlanirano(), datumVracanja);
         rezervacija.setKazna(kazna);
         rezervacija.setCenaUkupno(rezervacija.getCenaNajma()
                 + rezervacija.getCenaDodatnihUsluga() + kazna);
