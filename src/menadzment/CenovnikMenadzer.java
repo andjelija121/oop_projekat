@@ -328,4 +328,31 @@ public class CenovnikMenadzer {
         cenovnikRepozitorijum.sacuvajSve(cenovnici);
         return true;
     }
+
+    public boolean obrisiCenovnik(Korisnik korisnik, int cenovnikId) {
+        if (!(korisnik instanceof Administrator)) {
+            return false;
+        }
+
+        ArrayList<Cenovnik> cenovnici = ucitajCenovnike();
+        if (cenovnici.size() <= 1) {
+            return false;
+        }
+
+        boolean obrisan = false;
+        for (int i = 0; i < cenovnici.size(); i++) {
+            if (cenovnici.get(i).getId() == cenovnikId) {
+                cenovnici.remove(i);
+                obrisan = true;
+                break;
+            }
+        }
+
+        if (!obrisan) {
+            return false;
+        }
+
+        cenovnikRepozitorijum.sacuvajSve(cenovnici);
+        return true;
+    }
 }

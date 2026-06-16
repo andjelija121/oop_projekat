@@ -35,6 +35,11 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagLayout;
+import java.awt.GraphicsEnvironment;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
@@ -73,6 +78,7 @@ public class AdministratorPanel extends JPanel {
         tabs.addTab("Chartovi", chartoviPanel());
         tabs.addTab("Dodaj zaposlenog", dodajZaposlenogPanel());
         tabs.addTab("Cenovnik", cenovnikPanel());
+        tabs.addTab("Podaci sistema", podaciSistemaPanel());
         tabs.addTab("Podesavanja", podesavanjaPanel());
         add(UiKomponente.okvirAplikacije(tabs, "Administracija", administrator, odjava));
     }
@@ -372,6 +378,222 @@ public class AdministratorPanel extends JPanel {
         return nazivi[mesec.getMonthValue() - 1];
     }
 
+    private JPanel podaciSistemaPanel() {
+        JPanel panel = UiKomponente.kartica(new BorderLayout(0, 12));
+        panel.add(UiKomponente.naslovSekcije("Podaci sistema"), BorderLayout.NORTH);
+
+        JTabbedPane tabovi = UiKomponente.tabovi();
+        for (CsvEntitet entitet : csvEntiteti()) {
+            tabovi.addTab(entitet.naziv, csvCrudPanel(entitet));
+        }
+
+        panel.add(tabovi, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private ArrayList<CsvEntitet> csvEntiteti() {
+        ArrayList<CsvEntitet> entiteti = new ArrayList<>();
+        entiteti.add(new CsvEntitet("Korisnici", "src/fajlovi/korisnici.csv"));
+        entiteti.add(new CsvEntitet("Pretplate", "src/fajlovi/pretplate.csv"));
+        entiteti.add(new CsvEntitet("Zahtevi pretplate", "src/fajlovi/zahtevi_pretplate.csv"));
+        entiteti.add(new CsvEntitet("Rezervacije", "src/fajlovi/rezervacije.csv"));
+        entiteti.add(new CsvEntitet("Rezervacija-usluge", "src/fajlovi/rezervacija_usluge.csv"));
+        entiteti.add(new CsvEntitet("Izdavanja", "src/fajlovi/izdavanja.csv"));
+        entiteti.add(new CsvEntitet("Modeli vozila", "src/fajlovi/modeli_vozila.csv"));
+        entiteti.add(new CsvEntitet("Vozila", "src/fajlovi/vozila.csv"));
+        entiteti.add(new CsvEntitet("Dodatne usluge", "src/fajlovi/dodatne_usluge.csv"));
+        return entiteti;
+    }
+
+    private JPanel csvCrudPanel(CsvEntitet entitet) {
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        panel.setBackground(UiKomponente.PANEL);
+
+        DefaultTableModel model = ucitajCsvModel(entitet);
+        JTable tabela = UiKomponente.tabela(model);
+        JButton dodaj = new JButton("Dodaj red");
+        JButton izmeni = new JButton("Izmeni izabrani red");
+        JButton obrisi = new JButton("Obrisi izabrani red");
+        JButton sacuvaj = UiKomponente.primarnoDugme("Sacuvaj izmene");
+
+        dodaj.addActionListener(e -> dodajPrazanRed(model));
+        izmeni.addActionListener(e -> izmeniIzabraniRed(tabela, model));
+        obrisi.addActionListener(e -> obrisiIzabraniRed(tabela, model));
+        sacuvaj.addActionListener(e -> sacuvajCsvModel(entitet, model));
+
+        JPanel dugmad = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        dugmad.setBackground(UiKomponente.PANEL);
+        dugmad.add(dodaj);
+        dugmad.add(izmeni);
+        dugmad.add(obrisi);
+        dugmad.add(sacuvaj);
+
+        panel.add(new JScrollPane(tabela), BorderLayout.CENTER);
+        panel.add(dugmad, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private DefaultTableModel ucitajCsvModel(CsvEntitet entitet) {
+        try {
+            ArrayList<String> linije = new ArrayList<>(Files.readAllLines(entitet.putanja, StandardCharsets.UTF_8));
+            if (linije.isEmpty()) {
+                return new DefaultTableModel();
+            }
+
+            String[] kolone = linije.get(0).split(",", -1);
+            DefaultTableModel model = new DefaultTableModel(kolone, 0);
+            for (int i = 1; i < linije.size(); i++) {
+                if (!linije.get(i).isBlank()) {
+                    model.addRow(redSaTacnimBrojemKolona(linije.get(i), kolone.length));
+                }
+            }
+
+            return model;
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Ne mogu da ucitam fajl: " + entitet.putanja);
+            return new DefaultTableModel();
+        }
+    }
+
+    private String[] redSaTacnimBrojemKolona(String linija, int brojKolona) {
+        String[] delovi = linija.split(",", -1);
+        String[] red = new String[brojKolona];
+        for (int i = 0; i < brojKolona; i++) {
+            red[i] = i < delovi.length ? delovi[i] : "";
+        }
+        return red;
+    }
+
+    private void dodajPrazanRed(DefaultTableModel model) {
+        Object[] red = new Object[model.getColumnCount()];
+        for (int i = 0; i < red.length; i++) {
+            red[i] = "";
+        }
+
+        if (model.getColumnCount() > 0 && "id".equalsIgnoreCase(model.getColumnName(0))) {
+            red[0] = sledeciIdIzTabele(model);
+        }
+
+        model.addRow(red);
+    }
+
+    private void izmeniIzabraniRed(JTable tabela, DefaultTableModel model) {
+        int redTabele = tabela.getSelectedRow();
+        if (redTabele == -1) {
+            JOptionPane.showMessageDialog(this, "Izaberite red u tabeli.");
+            return;
+        }
+
+        int redModela = tabela.convertRowIndexToModel(redTabele);
+        JPanel forma = new JPanel(new GridBagLayout());
+        forma.setBackground(UiKomponente.PANEL);
+        ArrayList<JTextField> polja = new ArrayList<>();
+
+        for (int i = 0; i < model.getColumnCount(); i++) {
+            JTextField polje = new JTextField(vrednostCelije(model, redModela, i));
+            polja.add(polje);
+            UiKomponente.dodajPolje(forma, i, model.getColumnName(i), polje);
+        }
+
+        int izbor = JOptionPane.showConfirmDialog(this, new JScrollPane(forma),
+                "Izmena reda", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (izbor != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        for (int i = 0; i < polja.size(); i++) {
+            model.setValueAt(polja.get(i).getText().trim(), redModela, i);
+        }
+    }
+
+    private String vrednostCelije(DefaultTableModel model, int red, int kolona) {
+        Object vrednost = model.getValueAt(red, kolona);
+        return vrednost == null ? "" : vrednost.toString();
+    }
+
+    private int sledeciIdIzTabele(DefaultTableModel model) {
+        int najveciId = 0;
+        for (int i = 0; i < model.getRowCount(); i++) {
+            Object vrednost = model.getValueAt(i, 0);
+            if (vrednost == null || vrednost.toString().isBlank()) {
+                continue;
+            }
+
+            try {
+                int id = Integer.parseInt(vrednost.toString().trim());
+                if (id > najveciId) {
+                    najveciId = id;
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        return najveciId + 1;
+    }
+
+    private void obrisiIzabraniRed(JTable tabela, DefaultTableModel model) {
+        int red = tabela.getSelectedRow();
+        if (red == -1) {
+            JOptionPane.showMessageDialog(this, "Izaberite red u tabeli.");
+            return;
+        }
+
+        int izbor = GraphicsEnvironment.isHeadless()
+                ? JOptionPane.YES_OPTION
+                : JOptionPane.showConfirmDialog(this, "Da li zelite da obrisete izabrani red?",
+                "Brisanje", JOptionPane.YES_NO_OPTION);
+        if (izbor == JOptionPane.YES_OPTION) {
+            model.removeRow(tabela.convertRowIndexToModel(red));
+        }
+    }
+
+    private void sacuvajCsvModel(CsvEntitet entitet, DefaultTableModel model) {
+        ArrayList<String> linije = new ArrayList<>();
+        linije.add(zaglavljeCsv(model));
+        for (int i = 0; i < model.getRowCount(); i++) {
+            linije.add(redCsv(model, i));
+        }
+
+        try {
+            Files.write(entitet.putanja, linije, StandardCharsets.UTF_8);
+            if (!GraphicsEnvironment.isHeadless()) {
+                JOptionPane.showMessageDialog(this, "Sacuvane su izmene za: " + entitet.naziv);
+            }
+            osvezi.run();
+        } catch (IOException e) {
+            if (!GraphicsEnvironment.isHeadless()) {
+                JOptionPane.showMessageDialog(this, "Ne mogu da sacuvam fajl: " + entitet.putanja);
+            }
+        }
+    }
+
+    private String zaglavljeCsv(DefaultTableModel model) {
+        ArrayList<String> kolone = new ArrayList<>();
+        for (int i = 0; i < model.getColumnCount(); i++) {
+            kolone.add(model.getColumnName(i));
+        }
+        return String.join(",", kolone);
+    }
+
+    private String redCsv(DefaultTableModel model, int red) {
+        ArrayList<String> vrednosti = new ArrayList<>();
+        for (int i = 0; i < model.getColumnCount(); i++) {
+            Object vrednost = model.getValueAt(red, i);
+            vrednosti.add(vrednost == null ? "" : vrednost.toString().trim());
+        }
+        return String.join(",", vrednosti);
+    }
+
+    private static class CsvEntitet {
+        private final String naziv;
+        private final Path putanja;
+
+        private CsvEntitet(String naziv, String putanja) {
+            this.naziv = naziv;
+            this.putanja = Path.of(putanja);
+        }
+    }
+
     private JPanel cenovnikPanel() {
         JPanel panel = UiKomponente.kartica(new BorderLayout(0, 14));
         panel.add(UiKomponente.naslovSekcije("Cenovnik"), BorderLayout.NORTH);
@@ -433,9 +655,15 @@ public class AdministratorPanel extends JPanel {
         JPanel blok = new JPanel(new BorderLayout(0, 6));
         blok.setBackground(UiKomponente.PANEL);
 
+        JPanel zaglavlje = new JPanel(new BorderLayout());
+        zaglavlje.setBackground(UiKomponente.PANEL);
         JLabel naslov = new JLabel("Vazi od " + cenovnik.getDatumOd() + " do " + cenovnik.getDatumDo());
         naslov.setFont(naslov.getFont().deriveFont(Font.BOLD));
-        blok.add(naslov, BorderLayout.NORTH);
+        JButton obrisi = new JButton("Obrisi cenovnik");
+        obrisi.addActionListener(e -> obrisiCenovnik(cenovnik));
+        zaglavlje.add(naslov, BorderLayout.WEST);
+        zaglavlje.add(obrisi, BorderLayout.EAST);
+        blok.add(zaglavlje, BorderLayout.NORTH);
 
         DefaultTableModel model = UiKomponente.modelTabele(
                 new String[]{"Tip", "Vozilo", "Klijent/Usluga", "Vrednost"});
@@ -452,6 +680,24 @@ public class AdministratorPanel extends JPanel {
         blok.add(tabelaPanel, BorderLayout.CENTER);
 
         return blok;
+    }
+
+    private void obrisiCenovnik(Cenovnik cenovnik) {
+        int izbor = JOptionPane.showConfirmDialog(this,
+                "Da li zelite da obrisete cenovnik koji vazi od " + cenovnik.getDatumOd()
+                        + " do " + cenovnik.getDatumDo() + "?",
+                "Brisanje cenovnika", JOptionPane.YES_NO_OPTION);
+        if (izbor != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        boolean uspesno = cenovnikMenadzer.obrisiCenovnik(administrator, cenovnik.getId());
+        JOptionPane.showMessageDialog(this, uspesno
+                ? "Cenovnik je obrisan."
+                : "Cenovnik nije obrisan. Mora ostati bar jedan cenovnik u sistemu.");
+        if (uspesno) {
+            osvezi.run();
+        }
     }
 
     private String opisTipaCene(StavkaCenovnika stavka) {
